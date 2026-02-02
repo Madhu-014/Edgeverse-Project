@@ -1403,31 +1403,54 @@ with tabs[2]:
     st.markdown("<br>", unsafe_allow_html=True)
     
     if st.button("Run Auto-Annotation", type="primary"):
-        with st.spinner("Running YOLO inference..."):
-            proc = run_auto_annotation()
-        
-        if proc.returncode == 0:
-            # Clear existing annotations in the default directory
-            clear_directory(ANNOT_DIR)
-            
-            if chosen_annot_dir.resolve() != ANNOT_DIR.resolve():
-                # Clear the custom directory as well
-                clear_directory(chosen_annot_dir)
-                for src_path in ANNOT_DIR.rglob("*"):
-                    if src_path.is_dir():
-                        continue
-                    rel = src_path.relative_to(ANNOT_DIR)
-                    dest_path = chosen_annot_dir / rel
-                    dest_path.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(src_path, dest_path)
-            st.success(f"✓ Cleared previous annotations and saved new results to {chosen_annot_dir}")
-            st.balloons()
+        # Verify frames exist before running
+        frames_list = list_images(FRAMES_DIR)
+        if not frames_list:
+            st.error("❌ No frames found in output_frames/ directory. Please extract frames first!")
         else:
-            st.error(f"Failed with exit code {proc.returncode}")
-        
-        with st.expander("Logs"):
-            st.code(proc.stdout if proc.stdout else "No output")
-            st.code(proc.stderr if proc.stderr else "No errors")
+            st.info(f"ℹ Found {len(frames_list)} frames to process. Starting auto-annotation...")
+            
+            with st.spinner("Running YOLO inference..."):
+                proc = run_auto_annotation()
+            
+            if proc.returncode == 0:
+                # Clear existing annotations in the default directory
+                clear_directory(ANNOT_DIR)
+                
+                if chosen_annot_dir.resolve() != ANNOT_DIR.resolve():
+                    # Clear the custom directory as well
+                    clear_directory(chosen_annot_dir)
+                    for src_path in ANNOT_DIR.rglob("*"):
+                        if src_path.is_dir():
+                            continue
+                        rel = src_path.relative_to(ANNOT_DIR)
+                        dest_path = chosen_annot_dir / rel
+                        dest_path.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.copy2(src_path, dest_path)
+                
+                # Verify annotations were created
+                annot_files = list(ANNOT_DIR.glob("*.txt"))
+                if annot_files:
+                    st.success(f"✓ Auto-annotation completed! Generated {len(annot_files)} annotation files in {chosen_annot_dir}")
+                    st.balloons()
+                else:
+                    st.warning("⚠ Script completed but no annotations were generated. Check logs below.")
+            else:
+                st.error(f"❌ Auto-annotation failed with exit code {proc.returncode}")
+                st.error("💡 Common issues:")
+                st.error("  • No YOLO model found (check for yolo12s.pt, yolo11n.pt, or best.pt)")
+                st.error("  • Class files missing (class/old_classes.txt or class/new_classes.txt)")
+                st.error("  • No frames in output_frames/ directory")
+                st.error("  • Insufficient memory for model inference")
+            
+            with st.expander("📋 View Full Logs"):
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.write("**STDOUT:**")
+                    st.code(proc.stdout if proc.stdout else "No output", language="text")
+                with col2:
+                    st.write("**STDERR:**")
+                    st.code(proc.stderr if proc.stderr else "No errors", language="text")
 
 # Tab 4: Preview
 with tabs[3]:
