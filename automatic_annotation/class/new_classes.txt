@@ -1,0 +1,12 @@
+person
+bicycle
+car
+motorbike
+bus
+truck
+auto
+headlight
+crane
+potholes
+dog
+cow

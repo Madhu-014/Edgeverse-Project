@@ -1,0 +1,266 @@
+# ===== PYTHON =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ===== VIRTUAL ENVIRONMENTS =====
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# ===== IDE & EDITORS =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.sublime-project
+.sublime-workspace
+*.code-workspace
+.history/
+
+# ===== STREAMLIT =====
+.streamlit/
+*.streamlit.app
+streamlit_cache/
+
+# ===== ENVIRONMENT VARIABLES =====
+.env
+.env.local
+.env.*.local
+.envrc
+
+# ===== LARGE DATA FILES =====
+# Videos
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.flv
+*.wmv
+*.webm
+*.3gp
+videos/
+segmented_videos/
+
+# ===== GENERATED FRAMES =====
+output_frames/
+frames_extracted/
+temp_frames/
+images/train/
+images/val/
+images/test/
+# Navigation frames directory
+automatic_annotation/nav/
+nav/
+
+# ===== GENERATED ANNOTATIONS =====
+output_annotation/
+annotations/
+labels/train/
+labels/val/
+labels/test/
+temp_annotations/
+annotated_data/
+
+# ===== DATASETS =====
+dataset/
+datasets/
+**/dataset/
+**/datasets/
+
+# ===== MODEL FILES (Large) =====
+*.pt
+*.pth
+*.weights
+*.onnx
+*.pb
+*.jit
+*.tflite
+*.h5
+*.keras
+best.pt
+last.pt
+yolo*.pt
+*.mlmodel
+
+# Keep only the requirements (add ! prefix to whitelist specific model files if needed)
+# !path/to/specific/model.pt
+
+# ===== YOLO/Ultralytics Specific =====
+runs/
+wandb/
+*.cache
+*.yaml.bak
+
+# ===== LOG FILES =====
+*.log
+logs/
+*.txt.log
+*.out
+
+# ===== TEMPORARY FILES =====
+*.tmp
+temp/
+tmp/
+*.temp
+.cache/
+*.swp
+*.swo
+
+# ===== JUPYTER =====
+.ipynb_checkpoints/
+*.ipynb
+.jupyter/
+
+# ===== OS SPECIFIC =====
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+.TemporaryItems
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.fseventsd
+.DocumentRevisions-V100
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+*.exe
+*.dll
+*.lib
+*.obj
+
+# Linux
+*~
+.nfs*
+
+# ===== PROJECT SPECIFIC =====
+# Backup files
+*.bak
+*.backup
+*.orig
+*_backup
+*_old
+
+# Lock files (uncomment to commit lock files)
+# poetry.lock
+# Pipfile.lock
+# package-lock.json
+
+# Output files that may contain sensitive data
+class_counts.txt
+*.csv
+*.xlsx
+
+# ===== PYCACHE IN SUBDIRECTORIES =====
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# ===== VENV IN SUBDIRECTORIES =====
+**/venv/
+**/env/
+**/.venv/
+
+# ===== TESTING =====
+.pytest_cache/
+.tox/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+nosetests.xml
+test-results/
+
+# ===== MYPY & TYPE CHECKING =====
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# ===== ROPE =====
+.ropeproject/
+
+# ===== PROFILING =====
+*.prof
+*.pstat
+
+# ===== PROJECT OUTPUTS - Keep source, ignore generated =====
+output/
+results/
+checkpoints/
+*.zip
+
+# ===== NODE (if using any Node tools) =====
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===== GPU/CUDA =====
+*.cu.o
+*.ptx
+
+# ===== C/C++ (if any extensions) =====
+*.o
+*.a
+*.so
+*.dylib
+*.gch
+
+# ===== Documentation Build =====
+docs/_build/
+site/
+
+# ===== Misc =====
+.sass-cache/
+*.pid
+*.seed
+*.pid.lock
+
+# ===== Keep These Files (Whitelist Examples) =====
+# Class definition files MUST be tracked
+!automatic_annotation/class/
+!automatic_annotation/class/*.txt
+
+# Uncomment to track specific important files:
+# !important_model.pt
+# !example_video_small.mp4
