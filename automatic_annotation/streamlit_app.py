@@ -1409,6 +1409,10 @@ with tabs[2]:
     st.markdown("<br>", unsafe_allow_html=True)
     
     if st.button("Run Auto-Annotation", type="primary"):
+        # Get directories from session state
+        chosen_frames_dir = Path(st.session_state.get("frames_dir", str(FRAMES_DIR)))
+        chosen_annot_dir = Path(st.session_state.get("annot_dir", str(ANNOT_DIR)))
+        
         # Verify frames exist before running
         frames_list = list_images(chosen_frames_dir)
         if not frames_list:
@@ -1434,6 +1438,15 @@ with tabs[2]:
                 st.error("  • No YOLO model found (check for yolo12s.pt, yolo11n.pt, or best.pt)")
                 st.error("  • Class files missing (class/old_classes.txt or class/new_classes.txt)")
                 st.error("  • Insufficient memory for model inference")
+            
+            with st.expander("📋 View Full Logs"):
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.write("**STDOUT:**")
+                    st.code(proc.stdout if proc.stdout else "No output", language="text")
+                with col2:
+                    st.write("**STDERR:**")
+                    st.code(proc.stderr if proc.stderr else "No errors", language="text")
             
             with st.expander("📋 View Full Logs"):
                 col1, col2 = st.columns(2)
