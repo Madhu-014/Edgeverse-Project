@@ -951,9 +951,15 @@ def save_uploaded_file(uploaded_file, dest_path: Path):
         f.write(uploaded_file.getbuffer())
     return dest_path
 
-def run_auto_annotation() -> subprocess.CompletedProcess:
+def run_auto_annotation(frames_dir: str, annot_dir: str) -> subprocess.CompletedProcess:
+    """Run auto-annotation with specified directories"""
     return subprocess.run(
-        [sys.executable, "auto_annotation.py"],
+        [
+            sys.executable, 
+            "auto_annotation.py",
+            "--frames-dir", str(frames_dir),
+            "--annot-dir", str(annot_dir),
+        ],
         cwd=str(BASE_DIR),
         capture_output=True,
         text=True,
@@ -1404,32 +1410,19 @@ with tabs[2]:
     
     if st.button("Run Auto-Annotation", type="primary"):
         # Verify frames exist before running
-        frames_list = list_images(FRAMES_DIR)
+        frames_list = list_images(chosen_frames_dir)
         if not frames_list:
-            st.error("❌ No frames found in output_frames/ directory. Please extract frames first!")
+            st.error(f"❌ No frames found in {chosen_frames_dir}. Please extract frames first!")
         else:
             st.info(f"ℹ Found {len(frames_list)} frames to process. Starting auto-annotation...")
+            st.info(f"📂 Using: Frames from '{chosen_frames_dir}' → Annotations to '{chosen_annot_dir}'")
             
             with st.spinner("Running YOLO inference..."):
-                proc = run_auto_annotation()
+                proc = run_auto_annotation(str(chosen_frames_dir), str(chosen_annot_dir))
             
             if proc.returncode == 0:
-                # Clear existing annotations in the default directory
-                clear_directory(ANNOT_DIR)
-                
-                if chosen_annot_dir.resolve() != ANNOT_DIR.resolve():
-                    # Clear the custom directory as well
-                    clear_directory(chosen_annot_dir)
-                    for src_path in ANNOT_DIR.rglob("*"):
-                        if src_path.is_dir():
-                            continue
-                        rel = src_path.relative_to(ANNOT_DIR)
-                        dest_path = chosen_annot_dir / rel
-                        dest_path.parent.mkdir(parents=True, exist_ok=True)
-                        shutil.copy2(src_path, dest_path)
-                
                 # Verify annotations were created
-                annot_files = list(ANNOT_DIR.glob("*.txt"))
+                annot_files = list(chosen_annot_dir.glob("*.txt"))
                 if annot_files:
                     st.success(f"✓ Auto-annotation completed! Generated {len(annot_files)} annotation files in {chosen_annot_dir}")
                     st.balloons()
@@ -1440,7 +1433,6 @@ with tabs[2]:
                 st.error("💡 Common issues:")
                 st.error("  • No YOLO model found (check for yolo12s.pt, yolo11n.pt, or best.pt)")
                 st.error("  • Class files missing (class/old_classes.txt or class/new_classes.txt)")
-                st.error("  • No frames in output_frames/ directory")
                 st.error("  • Insufficient memory for model inference")
             
             with st.expander("📋 View Full Logs"):
@@ -1471,66 +1463,71 @@ with tabs[3]:
     </div>
     ''', unsafe_allow_html=True)
     
-    annot_dir = Path(st.session_state.get("annot_dir", str(ANNOT_DIR)))
+    # Use the selected annotation directory from session state
+    preview_annot_dir = Path(st.session_state.get("annot_dir", str(ANNOT_DIR)))
     
-    st.markdown("""
-    <style>
-    .preview-controls {
-        background: rgba(17, 24, 39, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 12px;
-        padding: 1rem 1.25rem;
-        margin: 1rem 0 1.5rem 0;
-    }
-    .control-label {
-        color: #94a3b8;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.5rem;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    col_prev1, col_prev2, col_prev3 = st.columns([2, 1, 1])
-    with col_prev1:
-        st.markdown('<p class="control-label">Source Directory</p>', unsafe_allow_html=True)
-        st.code(str(annot_dir), language=None)
-    with col_prev2:
-        sample_count = st.number_input(
-            "Images to display",
-            min_value=3,
-            max_value=100,
-            value=12,
-            step=3,
-            key="preview_count"
-        )
-    with col_prev3:
-        cols_per_row = st.selectbox("Grid columns", [2, 3, 4, 5], index=1, key="cols_per_row")
-    
-    imgs = list_images(annot_dir, limit=sample_count)
-    
-    if imgs:
-        st.success(f"Displaying {len(imgs)} annotated images in {cols_per_row} columns")
-        cols = st.columns(cols_per_row)
-        for i, p in enumerate(imgs):
-            try:
-                pil = load_image(p)
-                txt = p.with_suffix(".txt")
-                drawn = draw_yolo_boxes_on_image(pil, txt)
-                with cols[i % cols_per_row]:
-                    st.image(drawn, caption=p.name)
-            except Exception:
-                with cols[i % cols_per_row]:
-                    st.error(f"Failed to load {p.name}")
+    if not preview_annot_dir.exists():
+        st.warning(f"⚠ Annotation directory not found: {preview_annot_dir}")
+        st.info("💡 Go to **Project Configuration** to set the correct paths")
     else:
-        st.markdown('''
-        <div class="empty-state">
-            <div class="empty-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+        st.markdown("""
+        <style>
+        .preview-controls {
+            background: rgba(17, 24, 39, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin: 1rem 0 1.5rem 0;
+        }
+        .control-label {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        col_prev1, col_prev2, col_prev3 = st.columns([2, 1, 1])
+        with col_prev1:
+            st.markdown('<p class="control-label">Source Directory</p>', unsafe_allow_html=True)
+            st.code(str(preview_annot_dir), language=None)
+        with col_prev2:
+            sample_count = st.number_input(
+                "Images to display",
+                min_value=3,
+                max_value=100,
+                value=12,
+                step=3,
+                key="preview_count"
+            )
+        with col_prev3:
+            cols_per_row = st.selectbox("Grid columns", [2, 3, 4, 5], index=1, key="cols_per_row")
+        
+        imgs = list_images(preview_annot_dir, limit=sample_count)
+        
+        if imgs:
+            st.success(f"Displaying {len(imgs)} annotated images in {cols_per_row} columns")
+            cols = st.columns(cols_per_row)
+            for i, p in enumerate(imgs):
+                try:
+                    pil = load_image(p)
+                    txt = p.with_suffix(".txt")
+                    drawn = draw_yolo_boxes_on_image(pil, txt)
+                    with cols[i % cols_per_row]:
+                        st.image(drawn, caption=p.name)
+                except Exception:
+                    with cols[i % cols_per_row]:
+                        st.error(f"Failed to load {p.name}")
+        else:
+            st.markdown('''
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
                     <polyline points="21 15 16 10 5 21"></polyline>
                 </svg>
             </div>
