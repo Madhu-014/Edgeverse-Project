@@ -107,6 +107,31 @@ automatic_annotation/
 └── scripts...
 ```
 
+### 🎛️ **Custom Directory Configuration**
+
+The application allows you to use custom directories for all operations:
+
+1. **Go to Project Configuration** tab in the web interface
+2. **Set custom paths:**
+   - Frames directory: Where extracted frames are stored
+   - Annotations directory: Where annotations will be saved
+3. **All operations respect these settings:**
+   - Frame extraction
+   - Data augmentation
+   - Auto-annotation
+   - Preview and analysis
+
+**Example custom setup:**
+```
+my_project/
+├── raw_videos/
+├── processed_frames/
+├── annotations_v1/
+└── annotations_v2/
+```
+
+You can configure the app to use any of these paths for your workflow!
+
 ---
 
 ## 🎯 Usage
@@ -283,25 +308,77 @@ Customize augmentation in the Streamlit UI or modify `data_augmentation.py`:
 6. **Manual Review**: Always review auto-annotations with LabelImg
 7. **GPU Acceleration**: Install PyTorch with CUDA for faster processing
 8. **Disk Space**: Ensure sufficient space for frames and annotations
+9. **Directory Paths**: Use the Project Configuration tab to set custom directories
+10. **Path Consistency**: Ensure directories exist and are readable/writable
 
 ---
 
 ## 🐛 Troubleshooting
 
+### General Issues
+
 **Issue**: LabelImg button doesn't work
 - **Solution**: Ensure LabelImg is installed and accessible from terminal
 
 **Issue**: YOLO model not found
-- **Solution**: Place `.pt` file in `automatic_annotation/` directory
+- **Solution**: Place `.pt` file in `automatic_annotation/` directory (checks: `yolo12s.pt`, `yolo11n.pt`, `best.pt`, `yolo12m.pt`)
 
 **Issue**: Video upload fails
-- **Solution**: Check file size (<200MB) or use segmentation tool
+- **Solution**: Check file size (<200MB) or use video segmentation tool
 
 **Issue**: Frames not extracted
 - **Solution**: Verify OpenCV installation: `pip install opencv-python --upgrade`
 
 **Issue**: Augmentation errors
 - **Solution**: Check image format and ensure frames are valid
+
+### Directory-Related Issues
+
+**Issue**: "No frames found in directory"
+- **Cause**: Frames directory path is incorrect or doesn't contain frames
+- **Solution**: 
+  1. Go to **Project Configuration** tab
+  2. Verify the frames directory path
+  3. Ensure frames are extracted to that directory first
+  4. Check that directory permissions allow reading
+
+**Issue**: Annotations not saving to output_annotation/
+- **Cause**: Incorrect annotation directory path or permission issues
+- **Solution**:
+  1. Verify annotation directory path in Project Configuration
+  2. Ensure directory exists and has write permissions
+  3. Check subprocess logs (click "View Full Logs" button)
+  4. If custom path is used, verify it's absolute or relative correctly
+
+**Issue**: "Annotations directory not found" in Preview tab
+- **Cause**: Session state lost or path changed
+- **Solution**: 
+  1. Re-enter the annotation directory path in Project Configuration
+  2. Press Enter to confirm
+  3. Return to Preview tab
+
+**Issue**: Different directories not working properly
+- **Cause**: Paths not being passed correctly to subprocess
+- **Solution**:
+  1. Check logs for actual paths used
+  2. Verify directory names don't contain spaces (if possible)
+  3. Use absolute paths for consistency
+  4. Ensure all directories are created before operations
+
+### Command-Line Usage
+
+**To use custom directories via command line:**
+
+```bash
+# Auto-annotation with custom directories
+python auto_annotation.py --frames-dir ./my_frames --annot-dir ./my_annotations
+
+# Analyze dataset with custom directories
+python analyze_dataset.py --annot-dir ./my_annotations --output ./stats.txt
+
+# Extract frames with custom output
+python -c "from data_augmentation import extract_frames_every; extract_frames_every('video.mp4', './custom_frames', 3)"
+```
 
 ---
 
