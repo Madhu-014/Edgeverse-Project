@@ -1,7 +1,7 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="ARAS Auto-Annotation Studio",
+    page_title="Percieva™ Auto-Annotation Studio",
     page_icon="▶",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -174,15 +174,16 @@ st.markdown("""
         0 0 40px rgba(6, 182, 212, 0.05),
         inset 0 1px 0 rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .section-card:hover {
-    border-color: rgba(148, 163, 184, 0.2);
+    border-color: rgba(148, 163, 184, 0.3);
     box-shadow: 
-        0 15px 50px rgba(0, 0, 0, 0.4),
-        0 0 60px rgba(6, 182, 212, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        0 20px 60px rgba(0, 0, 0, 0.4),
+        0 0 80px rgba(6, 182, 212, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
 }
 
 .section-header {
@@ -220,6 +221,28 @@ st.markdown("""
     font-size: 0.9rem;
     margin: 0;
     font-weight: 400;
+}
+
+/* ===== METRIC CARDS ===== */
+.stMetric {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 16px;
+    padding: 1.25rem;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+}
+
+.stMetric:hover {
+    border-color: rgba(6, 182, 212, 0.3);
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%);
+    box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15);
+    transform: translateY(-2px);
+}
+
+/* ===== DIVIDER ===== */
+.stDivider {
+    background: linear-gradient(90deg, transparent 0%, rgba(148, 163, 184, 0.3) 50%, transparent 100%) !important;
 }
 
 /* ===== MODERN TABS ===== */
@@ -324,6 +347,58 @@ st.markdown("""
     border-color: rgba(6, 182, 212, 0.5) !important;
     box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15) !important;
     background: rgba(15, 23, 42, 0.95) !important;
+}
+
+/* ===== BUTTON STYLING ===== */
+.stButton > button {
+    background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem !important;
+    font-weight: 700;
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 8px 24px rgba(6, 182, 212, 0.35);
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(6, 182, 212, 0.45) !important;
+}
+
+.stButton > button:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 16px rgba(6, 182, 212, 0.3) !important;
+}
+
+/* ===== INPUT STYLING ===== */
+.stTextInput > div > div > input {
+    background: rgba(30, 41, 59, 0.6) !important;
+    border: 1.5px solid rgba(148, 163, 184, 0.2) !important;
+    border-radius: 12px !important;
+    color: #f8fafc !important;
+    padding: 0.75rem 1rem !important;
+    transition: all 0.3s ease !important;
+}
+
+.stTextInput > div > div > input:focus {
+    border-color: #06b6d4 !important;
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1) !important;
+}
+
+/* ===== EXPANDER STYLING ===== */
+.streamlit-expanderHeader {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%) !important;
+    border: 1px solid rgba(148, 163, 184, 0.15) !important;
+    border-radius: 12px !important;
+    padding: 1rem !important;
+    transition: all 0.3s ease !important;
+}
+
+.streamlit-expanderHeader:hover {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%) !important;
+    border-color: rgba(6, 182, 212, 0.3) !important;
 }
 
 .stTextInput label, .stNumberInput label, .stSelectbox label {
@@ -795,6 +870,172 @@ code {
     animation: fadeIn 0.5s ease-out;
 }
 
+/* ===== TOPBAR & NAV ===== */
+.nav-row {
+    margin: 0.75rem 0 1.5rem 0;
+}
+
+div[data-testid="stHorizontalBlock"]:has(input[name="nav_page"]) {
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 18px;
+    padding: 0.55rem 0.8rem;
+    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(12px);
+    align-items: center;
+}
+
+.topbar-title {
+    color: #e2e8f0;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    font-size: 1.05rem;
+    text-align: right;
+}
+
+.menu-btn .stButton > button {
+    background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%) !important;
+    color: #ffffff !important;
+    border: 0 !important;
+    border-radius: 12px !important;
+    padding: 0.45rem 0.8rem !important;
+    font-weight: 800 !important;
+    box-shadow: 0 10px 20px rgba(6, 182, 212, 0.25) !important;
+}
+
+div[data-testid="stRadio"]:has(input[name="nav_page"]) > div {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 14px;
+    padding: 0.25rem 0.4rem;
+    gap: 0.4rem;
+}
+
+div[data-testid="stRadio"]:has(input[name="nav_page"]) label {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 10px;
+    padding: 0.4rem 0.9rem;
+    color: #e2e8f0 !important;
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+div[data-testid="stRadio"]:has(input[name="nav_page"]) label:hover {
+    border-color: rgba(6, 182, 212, 0.35);
+    color: #ffffff !important;
+}
+
+div[data-testid="stRadio"]:has(input[name="nav_page"]) input:checked + div {
+    background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+    border-color: rgba(6, 182, 212, 0.55);
+    color: #ffffff !important;
+    box-shadow: 0 10px 25px rgba(6, 182, 212, 0.3);
+}
+
+/* ===== DRAWER ===== */
+.drawer {
+    position: fixed;
+    top: 0;
+    left: -500px;
+    width: 480px;
+    height: 100vh;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.99) 0%, rgba(30, 41, 59, 0.99) 100%);
+    border-right: 1.5px solid rgba(148, 163, 184, 0.15);
+    box-shadow: 25px 0 60px rgba(0, 0, 0, 0.45);
+    padding: 1.5rem 1.5rem;
+    transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 9999;
+    overflow-y: auto;
+    backdrop-filter: blur(8px);
+}
+
+.drawer.open {
+    left: 0;
+}
+
+.drawer.open ~ [data-testid="stAppViewContainer"] {
+    filter: brightness(0.5);
+    pointer-events: none;
+}
+
+.drawer::-webkit-scrollbar {
+    width: 6px;
+}
+
+.drawer::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.4);
+}
+
+.drawer::-webkit-scrollbar-thumb {
+    background: rgba(6, 182, 212, 0.4);
+    border-radius: 3px;
+}
+
+.drawer::-webkit-scrollbar-thumb:hover {
+    background: rgba(6, 182, 212, 0.6);
+}
+
+.drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.65);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+    z-index: 9998;
+}
+
+.drawer-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.drawer-title {
+    color: #f8fafc;
+    font-weight: 800;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5rem;
+}
+
+.drawer-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0.75rem 0 1rem 0;
+}
+
+.drawer-list li {
+    color: #e2e8f0;
+    padding: 0.5rem 0.65rem;
+    border-radius: 10px;
+    margin-bottom: 0.4rem;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.panel-blue {
+    background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    color: #ffffff;
+    box-shadow: 0 15px 40px rgba(14, 165, 233, 0.35);
+    margin: 1rem 0 2rem 0;
+}
+
+.panel-blue h2 {
+    margin: 0 0 0.35rem 0;
+    font-size: 1.6rem;
+    font-weight: 800;
+}
+
+.panel-blue p {
+    margin: 0;
+    opacity: 0.95;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
     .hero-title {
@@ -812,806 +1053,620 @@ code {
 </style>
 """, unsafe_allow_html=True)
 
-# Hero header with production design
-st.markdown("""
-<div class="hero-header">
-    <h1 class="hero-title">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:8px;">
-            <polygon points="23 7 16 12 23 17 23 7"></polygon>
-            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-        </svg>
-        ARAS Auto-Annotation Studio
-    </h1>
-    <p class="hero-subtitle">End-to-end video annotation pipeline powered by AI</p>
-    <div class="hero-badges">
-        <span class="hero-badge">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-            YOLO v11
-        </span>
-        <span class="hero-badge">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
-            Auto-Detect
-        </span>
-        <span class="hero-badge">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-            Export Ready
-        </span>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+# ===== PAGE STATE =====
+if "nav_page" not in st.session_state:
+    st.session_state["nav_page"] = "Annotate"
 
-# Folders info and configuration
-with st.expander("Project Configuration", expanded=False):
+# ============================================================================
+# PAGE NAVIGATION - Using Query Params
+# ============================================================================
+page_param = st.query_params.get("page", "annotate")
+current_page = "Annotate" if page_param == "annotate" else "Model Compare" if page_param == "model" else "Analytics"
+
+# Sidebar Navigation
+with st.sidebar:
     st.markdown("""
     <style>
-    .config-section {
-        background: rgba(17, 24, 39, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.04);
-        border-radius: 10px;
-        padding: 1rem;
-        margin: 0.75rem 0;
-    }
-    .config-title {
-        color: #e2e8f0;
-        font-size: 0.85rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.75rem;
+    [data-testid="stSidebarContent"] {
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
     }
     </style>
     """, unsafe_allow_html=True)
     
-    st.markdown("#### Directory Configuration")
-    st.info("Customize your working directories to match your project structure. Changes take effect immediately.")
+    st.markdown("""
+    <div style="text-align: center; margin-bottom: 2rem; padding-top: 1rem;">
+        <div style="font-size: 1.1rem; font-weight: 700; background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+            Percieva™
+        </div>
+        <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem;">Auto-Annotation Studio</div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    col_config1, col_config2 = st.columns(2)
+    # Navigation Buttons - Vertical Stack with Icons
+    st.markdown("""
+    <style>
+    .nav-divider {
+        background: linear-gradient(90deg, rgba(139, 92, 246, 0.2) 0%, transparent 50%, rgba(139, 92, 246, 0.2) 100%);
+        height: 1px;
+        margin: 1rem 0;
+    }
+    .stButton > button {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+    .stButton > button svg {
+        width: 18px;
+        height: 18px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     
-    with col_config1:
-        st.markdown('<div class="config-title">📁 Output Frames Directory</div>', unsafe_allow_html=True)
+    st.markdown('<div style="margin-bottom: 1rem;"></div>', unsafe_allow_html=True)
+    
+    # Annotate Button
+    annotate_active = page_param == "annotate"
+    col1, col2 = st.columns([0.15, 0.85])
+    with col1:
+        st.markdown(f"""
+        <svg viewBox="0 0 24 24" fill="none" stroke="{'#06b6d4' if annotate_active else 'currentColor'}" stroke-width="2" style="width: 20px; height: 20px; margin-top: 8px; transition: all 0.3s ease;">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        """, unsafe_allow_html=True)
+    with col2:
+        if st.button("Annotate", key="nav_annotate", use_container_width=True):
+            st.query_params["page"] = "annotate"
+            st.rerun()
+        if annotate_active:
+            st.markdown('<div style="height: 2px; background: linear-gradient(90deg, #06b6d4, #8b5cf6); margin-top: -8px; border-radius: 1px;"></div>', unsafe_allow_html=True)
+    
+    # Model Compare Button
+    model_active = page_param == "model"
+    col1, col2 = st.columns([0.15, 0.85])
+    with col1:
+        st.markdown(f"""
+        <svg viewBox="0 0 24 24" fill="none" stroke="{'#06b6d4' if model_active else 'currentColor'}" stroke-width="2" style="width: 20px; height: 20px; margin-top: 8px; transition: all 0.3s ease;">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 1v6m0 6v6m5.2-13.2l-4.2 4.2m0 6l4.2 4.2M23 12h-6m-6 0H5m13.2 5.2l-4.2-4.2m0-6l4.2-4.2"></path>
+        </svg>
+        """, unsafe_allow_html=True)
+    with col2:
+        if st.button("Model Compare", key="nav_model", use_container_width=True):
+            st.query_params["page"] = "model"
+            st.rerun()
+        if model_active:
+            st.markdown('<div style="height: 2px; background: linear-gradient(90deg, #06b6d4, #8b5cf6); margin-top: -8px; border-radius: 1px;"></div>', unsafe_allow_html=True)
+    
+    # Analytics Button
+    analytics_active = page_param == "analytics"
+    col1, col2 = st.columns([0.15, 0.85])
+    with col1:
+        st.markdown(f"""
+        <svg viewBox="0 0 24 24" fill="none" stroke="{'#06b6d4' if analytics_active else 'currentColor'}" stroke-width="2" style="width: 20px; height: 20px; margin-top: 8px; transition: all 0.3s ease;">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+        </svg>
+        """, unsafe_allow_html=True)
+    with col2:
+        if st.button("Analytics", key="nav_analytics", use_container_width=True):
+            st.query_params["page"] = "analytics"
+            st.rerun()
+        if analytics_active:
+            st.markdown('<div style="height: 2px; background: linear-gradient(90deg, #06b6d4, #8b5cf6); margin-top: -8px; border-radius: 1px;"></div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="nav-divider"></div>', unsafe_allow_html=True)
+    
+    # Optional: Settings section
+    st.markdown('<div style="margin-top: 1.5rem;"></div>', unsafe_allow_html=True)
+    with st.expander("⚙ Settings", expanded=False):
+        st.markdown("#### Directory Configuration")
         new_frames_dir = st.text_input(
-            "Frames directory path",
+            "Frames Directory",
             value=st.session_state["frames_dir"],
-            key="config_frames_input",
-            label_visibility="collapsed",
-            placeholder="e.g., ./output_frames or ./frames_extracted"
+            key="config_frames",
         )
         if new_frames_dir != st.session_state["frames_dir"]:
             st.session_state["frames_dir"] = new_frames_dir
             Path(new_frames_dir).mkdir(parents=True, exist_ok=True)
-            st.success(f"✓ Frames directory created/updated: {new_frames_dir}")
-    
-    with col_config2:
-        st.markdown('<div class="config-title">🏷️ Output Annotation Directory</div>', unsafe_allow_html=True)
+        
         new_annot_dir = st.text_input(
-            "Annotations directory path",
+            "Annotation Directory",
             value=st.session_state["annot_dir"],
-            key="config_annot_input",
-            label_visibility="collapsed",
-            placeholder="e.g., ./output_annotation or ./labels"
+            key="config_annot",
         )
         if new_annot_dir != st.session_state["annot_dir"]:
             st.session_state["annot_dir"] = new_annot_dir
             Path(new_annot_dir).mkdir(parents=True, exist_ok=True)
-            st.success(f"✓ Annotations directory created/updated: {new_annot_dir}")
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("#### Current Project Paths")
-    
-    col_display1, col_display2, col_display3 = st.columns(3)
-    
-    with col_display1:
-        st.markdown(f'''
-        <div class="folder-info">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
-            <span>Videos</span>
-        </div>
-        <div style="background: rgba(17, 24, 39, 0.4); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); font-family: monospace; font-size: 0.75rem; color: #64748b; word-break: break-all;">
-            {VIDEOS_DIR}
-        </div>
-        ''', unsafe_allow_html=True)
-    
-    with col_display2:
-        st.markdown(f'''
-        <div class="folder-info">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-            <span>Frames</span>
-        </div>
-        <div style="background: rgba(17, 24, 39, 0.4); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); font-family: monospace; font-size: 0.75rem; color: #64748b; word-break: break-all;">
-            {FRAMES_DIR}
-        </div>
-        ''', unsafe_allow_html=True)
-    
-    with col_display3:
-        st.markdown(f'''
-        <div class="folder-info">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
-            <span>Annotations</span>
-        </div>
-        <div style="background: rgba(17, 24, 39, 0.4); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); font-family: monospace; font-size: 0.75rem; color: #64748b; word-break: break-all;">
-            {ANNOT_DIR}
-        </div>
-        ''', unsafe_allow_html=True)
 
-def unzip_to_dir(zipped_bytes: bytes, dest_dir: Path):
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(io.BytesIO(zipped_bytes)) as zf:
-        zf.extractall(dest_dir)
+# ============================================================================
+# PAGE CONTENT
+# ============================================================================
 
-def clear_directory(dir_path: Path):
-    """Delete all files in a directory (does not delete subdirectories)"""
-    if dir_path.exists():
-        for item in dir_path.iterdir():
-            if item.is_file():
-                item.unlink()
-
-def save_uploaded_file(uploaded_file, dest_path: Path):
-    dest_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(dest_path, "wb") as f:
-        f.write(uploaded_file.getbuffer())
-    return dest_path
-
-def run_auto_annotation(frames_dir: str, annot_dir: str) -> subprocess.CompletedProcess:
-    """Run auto-annotation with specified directories"""
-    return subprocess.run(
-        [
-            sys.executable, 
-            "auto_annotation.py",
-            "--frames-dir", str(frames_dir),
-            "--annot-dir", str(annot_dir),
-        ],
-        cwd=str(BASE_DIR),
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-def list_images(dir_path: Path, limit: int = 30):
-    imgs = []
-    for root, _, files in os.walk(dir_path):
-        for f in files:
-            if f.lower().endswith((".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff")):
-                imgs.append(Path(root) / f)
-                if len(imgs) >= limit:
-                    return imgs
-    return imgs
-
-def load_image(path: Path) -> Image.Image:
-    img = cv2.imread(str(path))
-    if img is None:
-        raise FileNotFoundError(path)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    return Image.fromarray(img)
-
-def draw_yolo_boxes_on_image(img_pil: Image.Image, txt_path: Path, color=(0, 255, 0)) -> Image.Image:
-    img = np.array(img_pil).copy()
-    h, w = img.shape[:2]
-    if not txt_path.exists():
-        return Image.fromarray(img)
-    try:
-        with open(txt_path, "r") as f:
-            lines = [ln.strip() for ln in f.readlines() if ln.strip()]
-    except Exception:
-        lines = []
-    for ln in lines:
-        parts = ln.split()
-        if len(parts) != 5:
-            continue
-        _, cx, cy, bw, bh = map(float, parts)
-        x = int((cx - bw / 2) * w)
-        y = int((cy - bh / 2) * h)
-        x2 = int((cx + bw / 2) * w)
-        y2 = int((cy + bh / 2) * h)
-        cv2.rectangle(img, (x, y), (x2, y2), color, 2)
-    return Image.fromarray(img)
-
-# Tabs
-tabs = st.tabs(["Upload", "Augment", "Auto-Annotate", "Preview", "LabelImg"])
-
-# Tab 1: Upload
-with tabs[0]:
-    st.markdown('''
-    <div class="section-card">
-        <div class="section-header">
-            <div class="section-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-            </div>
-            <div>
-                <h3 class="section-title">Upload & Extract Frames</h3>
-                <p class="section-desc">Import your video files or image datasets to begin the annotation pipeline</p>
-            </div>
-        </div>
-    </div>
-    ''', unsafe_allow_html=True)
-    
-    col_info1, col_info2, col_info3 = st.columns(3)
-    with col_info1:
-        st.metric("Supported Videos", "MP4, AVI, MOV")
-    with col_info2:
-        st.metric("Image Formats", "JPG, PNG, BMP")
-    with col_info3:
-        st.metric("Max Upload Size", "200 MB")
-    
-    st.warning("""
-    **📹 Video Size Limit:** Videos must be under 200MB for upload.
-    
-    **If your video is larger:** Use the `segment_video.py` tool to split it into 200MB chunks:
-    ```
-    python segment_video.py large_video.mp4 ./segmented_videos 200
-    ```
-    Then upload each segment separately. All segments will be extracted to the same output folder.
-    """)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.info(f"📂 **Current destination:** `{FRAMES_DIR}` — Edit in **Project Configuration** to use a different directory")
-    
-    src_type = st.radio("Select source type", ["Video (.mp4)", "Images (ZIP or files)"], horizontal=True)
-    
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        dest_base = st.text_input("Destination folder", value=str(FRAMES_DIR), label_visibility="collapsed")
-    with col2:
-        create_subfolder = st.checkbox("Auto subfolder", value=True)
-
-    if src_type == "Video (.mp4)":
-        up_video = st.file_uploader("Select MP4 video", type=["mp4"], key="video_upl")
-        interval = st.number_input("Frame interval (seconds)", min_value=1, max_value=30, value=3, step=1)
-        
-        if up_video is not None:
-            st.success(f"Video loaded: {up_video.name} ({up_video.size / 1024 / 1024:.2f} MB)")
-            saved = save_uploaded_file(up_video, VIDEOS_DIR / up_video.name)
-            vid_name = Path(up_video.name).stem if create_subfolder else ""
-            out_dir = Path(dest_base) / vid_name if vid_name else Path(dest_base)
-            
-            if st.button("Extract Frames", type="primary"):
-                with st.spinner("Extracting frames..."):
-                    out_dir.mkdir(parents=True, exist_ok=True)
-                    # Clear existing frames
-                    clear_directory(out_dir)
-                    count = extract_frames_every(str(saved), str(out_dir), interval_seconds=int(interval))
-                st.success(f"✓ Cleared previous frames and extracted {count} new frames to {out_dir}")
-                st.balloons()
-    else:
-        col_zip, col_files = st.columns(2)
-        with col_zip:
-            up_zip = st.file_uploader("Images ZIP", type=["zip"], key="zip_upl")
-        with col_files:
-            up_imgs = st.file_uploader("Or select image files", type=["jpg", "jpeg", "png", "bmp"], accept_multiple_files=True, key="imgs_upl")
-
-        if up_zip is not None or up_imgs:
-            if up_zip:
-                st.success(f"ZIP loaded: {up_zip.name}")
-            if up_imgs:
-                st.success(f"Files selected: {len(up_imgs)} images")
-            
-            sub_name = "images" if up_zip else (up_imgs[0].name if up_imgs else "")
-            folder_name = Path(sub_name).stem if create_subfolder and sub_name else ""
-            out_dir = Path(dest_base) / folder_name if folder_name else Path(dest_base)
-            
-            if st.button("Save Images", type="primary"):
-                with st.spinner("Saving images..."):
-                    out_dir.mkdir(parents=True, exist_ok=True)
-                    # Clear existing images
-                    clear_directory(out_dir)
-                    if up_zip:
-                        unzip_to_dir(up_zip.getvalue(), out_dir)
-                    if up_imgs:
-                        for f in up_imgs:
-                            if f:
-                                with open(out_dir / Path(f.name).name, "wb") as fo:
-                                    fo.write(f.getbuffer())
-                st.success(f"✓ Cleared previous images and saved {len(up_imgs) if up_imgs else 'ZIP'} new images to {out_dir}")
-                st.balloons()
-
-# Tab 2: Augment
-with tabs[1]:
-    st.markdown('''
-    <div class="section-card">
-        <div class="section-header">
-            <div class="section-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                    <circle cx="13.5" cy="6.5" r="0.5" fill="white"></circle>
-                    <circle cx="17.5" cy="10.5" r="0.5" fill="white"></circle>
-                    <circle cx="8.5" cy="7.5" r="0.5" fill="white"></circle>
-                    <circle cx="6.5" cy="12.5" r="0.5" fill="white"></circle>
-                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z"></path>
-                </svg>
-            </div>
-            <div>
-                <h3 class="section-title">Data Augmentation</h3>
-                <p class="section-desc">Expand your dataset with intelligent transformations to improve model robustness</p>
-            </div>
-        </div>
-    </div>
-    ''', unsafe_allow_html=True)
-    
-    st.info("**ARAS-Optimized:** No horizontal flips are applied to preserve left/right arm semantics for accurate surgical annotations.")
-    
-    aug_target = st.text_input("Source folder", value=str(FRAMES_DIR), key="aug_folder")
-    
+# ANNOTATE PAGE
+if current_page == "Annotate":
+    # Hero Header
     st.markdown("""
-    <style>
-    .variant-selector {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin: 1rem 0 1.5rem 0;
-    }
-    .variant-label {
-        color: #94a3b8;
-        font-size: 0.85rem;
-        font-weight: 500;
-        margin-right: 0.5rem;
-    }
-    .variant-options {
-        display: flex;
-        gap: 0.35rem;
-    }
-    .variant-btn {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(17, 24, 39, 0.8);
-        color: #94a3b8;
-        font-weight: 600;
-        font-size: 0.95rem;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .variant-btn:hover {
-        background: rgba(99, 102, 241, 0.2);
-        border-color: rgba(99, 102, 241, 0.4);
-        color: #e2e8f0;
-    }
-    .variant-btn.active {
-        background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
-        border-color: transparent;
-        color: #ffffff;
-        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
-    }
-    </style>
+    <div class="hero-header">
+        <h1 class="hero-title">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:8px;">
+                <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+            </svg>
+            Percieva<sup>TM</sup> Auto-Annotation Studio
+        </h1>
+        <p class="hero-subtitle">End-to-end video annotation pipeline powered by AI</p>
+        <div class="hero-badges">
+            <span class="hero-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                Smart Capture
+            </span>
+            <span class="hero-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+                Auto Detect
+            </span>
+            <span class="hero-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                Export Ready
+            </span>
+        </div>
+    </div>
     """, unsafe_allow_html=True)
     
-    col_var1, col_var2 = st.columns([1, 3])
-    with col_var1:
-        st.markdown('<span class="variant-label">Variants per image:</span>', unsafe_allow_html=True)
-    with col_var2:
-        variants_per_image = st.selectbox(
-            "Select number",
-            options=[0, 1, 2, 3, 4, 5, 6],
-            index=2,
-            key="variants_select",
-            label_visibility="collapsed"
-        )
+    # Tabs for different sections
+    tabs = st.tabs(["Upload", "Augment", "Image Gallery", "Auto-Annotate", "Annotated Gallery"])
     
-    st.markdown("#### Augmentation Options")
-    
-    col_a, col_b, col_c = st.columns(3)
-    with col_a:
-        use_gaussian_noise = st.checkbox("Gaussian noise", value=True)
-        use_gaussian_blur = st.checkbox("Gaussian blur", value=True)
-    with col_b:
-        use_motion_blur = st.checkbox("Motion blur", value=True)
-        use_brightness_contrast = st.checkbox("Brightness/Contrast", value=True)
-    with col_c:
-        use_small_rotate = st.checkbox("Small rotation", value=True)
-        use_fog = st.checkbox("Light fog/haze", value=False)
-
-    if st.button("Run Augmentation", type="primary"):
-        with st.spinner("Augmenting images..."):
-            written = augment_images_in_dir(
-                str(aug_target),
-                output_dir=str(aug_target),
-                variants_per_image=int(variants_per_image),
-                use_gaussian_noise=use_gaussian_noise,
-                use_salt_pepper=False,
-                use_small_rotate=use_small_rotate,
-                use_brightness_contrast=use_brightness_contrast,
-                use_gaussian_blur=use_gaussian_blur,
-                use_motion_blur=use_motion_blur,
-                use_fog=use_fog,
-                use_color_shift=False,
-            )
-        st.success(f"Created {written} augmented images")
-        st.balloons()
-
-# Tab 3: Auto-Annotate
-with tabs[2]:
-    st.markdown('''
-    <div class="section-card">
-        <div class="section-header">
-            <div class="section-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    <circle cx="12" cy="16" r="1"></circle>
-                </svg>
-            </div>
-            <div>
-                <h3 class="section-title">AI Auto-Annotation</h3>
-                <p class="section-desc">Leverage YOLO deep learning to automatically detect and label objects in your frames</p>
-            </div>
-        </div>
-    </div>
-    ''', unsafe_allow_html=True)
-    
-    col_m1, col_m2, col_m3 = st.columns(3)
-    with col_m1:
-        st.metric("Model", "YOLO v11")
-    with col_m2:
-        st.metric("Output Format", "YOLO TXT")
-    with col_m3:
-        st.metric("GPU Accelerated", "Yes")
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.info(f"📂 **Current annotation directory:** `{ANNOT_DIR}` — Edit in **Project Configuration** to use a different directory")
-    
-    annot_dir_input = st.text_input(
-        "Annotation output directory",
-        value=st.session_state.get("annot_dir", str(ANNOT_DIR)),
-        key="annot_input",
-        label_visibility="collapsed"
-    )
-    st.session_state["annot_dir"] = annot_dir_input
-    chosen_annot_dir = Path(annot_dir_input)
-    chosen_annot_dir.mkdir(parents=True, exist_ok=True)
-    
-    # ===== CLASS MANAGEMENT SECTION =====
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown('''
-    <div class="section-card">
-        <div class="section-header">
-            <div class="section-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
-                    <line x1="7" y1="7" x2="7.01" y2="7"></line>
-                </svg>
-            </div>
-            <div>
-                <h3 class="section-title">Class Management</h3>
-                <p class="section-desc">Add or remove object classes for annotation</p>
-            </div>
-        </div>
-    </div>
-    ''', unsafe_allow_html=True)
-    
-    # Path to predefined_classes.txt in labelImg package
-    LABELIMG_CLASSES_PATH = Path("/Users/madhusudhan/Documents/edgeverse_project/venv/lib/python3.10/site-packages/labelImg/data/predefined_classes.txt")
-    # Path to new_classes.txt in project
-    NEW_CLASSES_PATH = BASE_DIR / "class" / "new_classes.txt"
-    
-    def load_classes():
-        """Load classes from classes.txt"""
-        classes = []
-        if CLASSES_TXT.exists():
-            with open(CLASSES_TXT, "r") as f:
-                classes = [line.strip() for line in f if line.strip()]
-        return classes
-    
-    def save_classes(classes_list):
-        """Save classes to classes.txt, predefined_classes.txt, and new_classes.txt"""
-        # Save to classes.txt
-        CLASSES_TXT.parent.mkdir(parents=True, exist_ok=True)
-        with open(CLASSES_TXT, "w") as f:
-            f.write("\n".join(classes_list) + "\n" if classes_list else "")
-        
-        # Save to predefined_classes.txt (LabelImg)
-        if LABELIMG_CLASSES_PATH.exists():
-            with open(LABELIMG_CLASSES_PATH, "w") as f:
-                f.write("\n".join(classes_list) + "\n" if classes_list else "")
-        
-        # Save to new_classes.txt
-        NEW_CLASSES_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(NEW_CLASSES_PATH, "w") as f:
-            f.write("\n".join(classes_list) + "\n" if classes_list else "")
-    
-    # Load current classes
-    current_classes = load_classes()
-    
-    # Display current classes
-    st.markdown("#### Current Classes")
-    if current_classes:
-        # Create a styled display of classes
-        classes_html = '<div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.75rem 0 1.5rem 0;">'
-        for idx, cls in enumerate(current_classes):
-            classes_html += f'''
-            <span style="
-                display: inline-flex;
-                align-items: center;
-                gap: 0.35rem;
-                background: rgba(99, 102, 241, 0.15);
-                border: 1px solid rgba(99, 102, 241, 0.3);
-                padding: 0.4rem 0.75rem;
-                border-radius: 8px;
-                font-size: 0.85rem;
-                color: #a5b4fc;
-            ">
-                <span style="color: #64748b; font-size: 0.7rem; font-weight: 600;">{idx}</span>
-                {cls}
-            </span>'''
-        classes_html += '</div>'
-        st.markdown(classes_html, unsafe_allow_html=True)
-    else:
-        st.warning("No classes defined yet. Add classes below.")
-    
-    # Add/Remove class controls
-    col_add, col_remove = st.columns(2)
-    
-    with col_add:
-        st.markdown("##### Add New Class")
-        new_class = st.text_input("Class name", key="new_class_input", placeholder="Enter class name...")
-        if st.button("➕ Add Class", key="add_class_btn"):
-            if new_class.strip():
-                new_class_clean = new_class.strip().lower()
-                if new_class_clean in [c.lower() for c in current_classes]:
-                    st.warning(f"Class '{new_class_clean}' already exists!")
-                else:
-                    current_classes.append(new_class_clean)
-                    save_classes(current_classes)
-                    st.success(f"Added class: '{new_class_clean}'")
-                    st.rerun()
-            else:
-                st.warning("Please enter a class name.")
-    
-    with col_remove:
-        st.markdown("##### Remove Class")
-        if current_classes:
-            class_to_remove = st.selectbox(
-                "Select class to remove",
-                options=current_classes,
-                key="remove_class_select"
-            )
-            if st.button("🗑️ Remove Class", key="remove_class_btn"):
-                if class_to_remove in current_classes:
-                    current_classes.remove(class_to_remove)
-                    save_classes(current_classes)
-                    st.success(f"Removed class: '{class_to_remove}'")
-                    st.rerun()
-        else:
-            st.info("No classes to remove.")
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # ===== END CLASS MANAGEMENT SECTION =====
-    
-    st.markdown('''
-    <div class="workflow-step">
-        <div class="step-number">1</div>
-        <div class="step-content">
-            <div class="step-title">Read Frames</div>
-            <div class="step-desc">Loads images from <code>output_frames</code> directory</div>
-        </div>
-    </div>
-    <div class="workflow-step">
-        <div class="step-number">2</div>
-        <div class="step-content">
-            <div class="step-title">YOLO Inference</div>
-            <div class="step-desc">Runs object detection on each frame using the trained model</div>
-        </div>
-    </div>
-    <div class="workflow-step">
-        <div class="step-number">3</div>
-        <div class="step-content">
-            <div class="step-title">Export Labels</div>
-            <div class="step-desc">Saves bounding boxes in YOLO format to <code>output_annotation</code></div>
-        </div>
-    </div>
-    ''', unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    if st.button("Run Auto-Annotation", type="primary"):
-        # Get directories from session state
-        chosen_frames_dir = Path(st.session_state.get("frames_dir", str(FRAMES_DIR)))
-        chosen_annot_dir = Path(st.session_state.get("annot_dir", str(ANNOT_DIR)))
-        
-        # Verify frames exist before running
-        frames_list = list_images(chosen_frames_dir)
-        if not frames_list:
-            st.error(f"❌ No frames found in {chosen_frames_dir}. Please extract frames first!")
-        else:
-            st.info(f"ℹ Found {len(frames_list)} frames to process. Starting auto-annotation...")
-            st.info(f"📂 Using: Frames from '{chosen_frames_dir}' → Annotations to '{chosen_annot_dir}'")
-            
-            with st.spinner("Running YOLO inference..."):
-                proc = run_auto_annotation(str(chosen_frames_dir), str(chosen_annot_dir))
-            
-            if proc.returncode == 0:
-                # Verify annotations were created
-                annot_files = list(chosen_annot_dir.glob("*.txt"))
-                if annot_files:
-                    st.success(f"✓ Auto-annotation completed! Generated {len(annot_files)} annotation files in {chosen_annot_dir}")
-                    st.balloons()
-                else:
-                    st.warning("⚠ Script completed but no annotations were generated. Check logs below.")
-            else:
-                st.error(f"❌ Auto-annotation failed with exit code {proc.returncode}")
-                st.error("💡 Common issues:")
-                st.error("  • No YOLO model found (check for yolo12s.pt, yolo11n.pt, or best.pt)")
-                st.error("  • Class files missing (class/old_classes.txt or class/new_classes.txt)")
-                st.error("  • Insufficient memory for model inference")
-            
-            with st.expander("📋 View Full Logs"):
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.write("**STDOUT:**")
-                    st.code(proc.stdout if proc.stdout else "No output", language="text")
-                with col2:
-                    st.write("**STDERR:**")
-                    st.code(proc.stderr if proc.stderr else "No errors", language="text")
-            
-            with st.expander("📋 View Full Logs"):
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.write("**STDOUT:**")
-                    st.code(proc.stdout if proc.stdout else "No output", language="text")
-                with col2:
-                    st.write("**STDERR:**")
-                    st.code(proc.stderr if proc.stderr else "No errors", language="text")
-
-# Tab 4: Preview
-with tabs[3]:
-    st.markdown('''
-    <div class="section-card">
-        <div class="section-header">
-            <div class="section-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-            </div>
-            <div>
-                <h3 class="section-title">Preview Annotations</h3>
-                <p class="section-desc">Visualize bounding boxes overlaid on your images to verify annotation quality</p>
-            </div>
-        </div>
-    </div>
-    ''', unsafe_allow_html=True)
-    
-    # Use the selected annotation directory from session state
-    preview_annot_dir = Path(st.session_state.get("annot_dir", str(ANNOT_DIR)))
-    
-    if not preview_annot_dir.exists():
-        st.warning(f"⚠ Annotation directory not found: {preview_annot_dir}")
-        st.info("💡 Go to **Project Configuration** to set the correct paths")
-    else:
+    # TAB 1: UPLOAD
+    with tabs[0]:
         st.markdown("""
-        <style>
-        .preview-controls {
-            background: rgba(17, 24, 39, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 12px;
-            padding: 1rem 1.25rem;
-            margin: 1rem 0 1.5rem 0;
-        }
-        .control-label {
-            color: #94a3b8;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.5rem;
-        }
-        </style>
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="section-title">Upload & Extract Frames</h3>
+                    <p class="section-desc">Import video files or image datasets</p>
+                </div>
+            </div>
+        </div>
         """, unsafe_allow_html=True)
         
-        col_prev1, col_prev2, col_prev3 = st.columns([2, 1, 1])
-        with col_prev1:
-            st.markdown('<p class="control-label">Source Directory</p>', unsafe_allow_html=True)
-            st.code(str(preview_annot_dir), language=None)
-        with col_prev2:
-            sample_count = st.number_input(
-                "Images to display",
-                min_value=3,
-                max_value=100,
-                value=12,
-                step=3,
-                key="preview_count"
-            )
-        with col_prev3:
-            cols_per_row = st.selectbox("Grid columns", [2, 3, 4, 5], index=1, key="cols_per_row")
+        col_info1, col_info2, col_info3 = st.columns(3)
+        with col_info1:
+            st.metric("Supported Videos", "MP4, AVI, MOV")
+        with col_info2:
+            st.metric("Image Formats", "JPG, PNG, BMP")
+        with col_info3:
+            st.metric("Max Size", "200 MB")
         
-        imgs = list_images(preview_annot_dir, limit=sample_count)
+        st.warning("""
+        **⚠ Video Size Limit:** Videos must be under 200MB for upload.
         
+        **If your video is larger:** Use the `segment_video.py` tool to split it into 200MB chunks:
+        ```
+        python segment_video.py large_video.mp4 ./segmented_videos 200
+        ```
+        Then upload each segment separately. All segments will be extracted to the same output folder.
+        """)
+        
+        st.info(f"ℹ **Current destination:** `{FRAMES_DIR}` — Edit in **Settings** to use a different directory")
+        
+        src_type = st.radio("Select source", ["Video (.mp4)", "Images (ZIP/Files)"], horizontal=True)
+        
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            dest_base = st.text_input("Destination folder", value=str(FRAMES_DIR), label_visibility="collapsed")
+        with col2:
+            create_subfolder = st.checkbox("Auto subfolder", value=True)
+        
+        if src_type == "Video (.mp4)":
+            up_video = st.file_uploader("Select MP4 video", type=["mp4"], key="video_upl")
+            interval = st.number_input("Frame interval (seconds)", min_value=1, max_value=30, value=3, step=1)
+            
+            if up_video is not None:
+                st.success(f"✓ Video loaded: {up_video.name} ({up_video.size / 1024 / 1024:.2f} MB)")
+                if st.button("Extract Frames", type="primary"):
+                    with st.spinner("Extracting frames..."):
+                        saved = Path(VIDEOS_DIR) / up_video.name
+                        saved.parent.mkdir(parents=True, exist_ok=True)
+                        with open(saved, "wb") as f:
+                            f.write(up_video.getbuffer())
+                        vid_name = Path(up_video.name).stem if create_subfolder else ""
+                        out_dir = Path(dest_base) / vid_name if vid_name else Path(dest_base)
+                        out_dir.mkdir(parents=True, exist_ok=True)
+                        # Clear existing frames
+                        for item in out_dir.iterdir():
+                            if item.is_file() and item.suffix.lower() in ['.jpg', '.jpeg', '.png', '.bmp']:
+                                item.unlink()
+                        count = extract_frames_every(str(saved), str(out_dir), interval_seconds=int(interval))
+                    st.success(f"✓ Cleared previous frames and extracted {count} new frames to {out_dir}")
+                    st.balloons()
+        else:
+            up_zip = st.file_uploader("Images ZIP", type=["zip"], key="zip_upl")
+            up_imgs = st.file_uploader("Or image files", type=["jpg", "jpeg", "png", "bmp"], accept_multiple_files=True, key="imgs_upl")
+            
+            if up_zip is not None or up_imgs:
+                if st.button("Save Images", type="primary"):
+                    with st.spinner("Saving images..."):
+                        out_dir = Path(dest_base)
+                        out_dir.mkdir(parents=True, exist_ok=True)
+                        # Clear existing images
+                        for item in out_dir.iterdir():
+                            if item.is_file() and item.suffix.lower() in ['.jpg', '.jpeg', '.png', '.bmp']:
+                                item.unlink()
+                        if up_zip:
+                            with zipfile.ZipFile(io.BytesIO(up_zip.getvalue())) as zf:
+                                zf.extractall(out_dir)
+                        if up_imgs:
+                            for f in up_imgs:
+                                with open(out_dir / f.name, "wb") as fo:
+                                    fo.write(f.getbuffer())
+                    st.success(f"✓ Cleared previous images and saved {len(up_imgs) if up_imgs else 'ZIP'} new images to {out_dir}")
+                    st.balloons()
+    
+    # TAB 2: AUGMENT
+    with tabs[1]:
+        st.markdown("""
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <circle cx="13.5" cy="6.5" r="0.5" fill="white"></circle>
+                        <circle cx="17.5" cy="10.5" r="0.5" fill="white"></circle>
+                        <circle cx="8.5" cy="7.5" r="0.5" fill="white"></circle>
+                        <circle cx="6.5" cy="12.5" r="0.5" fill="white"></circle>
+                        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="section-title">Data Augmentation</h3>
+                    <p class="section-desc">Expand your dataset with intelligent transformations</p>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col_m1, col_m2, col_m3 = st.columns(3)
+        with col_m1:
+            st.metric("Techniques", "6+")
+        with col_m2:
+            st.metric("Variants", "0-6 per image")
+        with col_m3:
+            st.metric("Output", "JPEG/PNG")
+        
+        st.divider()
+        
+        aug_target = st.text_input("Source folder", value=str(FRAMES_DIR), key="aug_folder")
+        variants = st.slider("Variants per image", 0, 6, 2)
+        
+        st.markdown("#### Augmentation Techniques")
+        col_a, col_b, col_c = st.columns(3)
+        with col_a:
+            use_noise = st.checkbox("Gaussian noise", True)
+            use_blur = st.checkbox("Gaussian blur", True)
+        with col_b:
+            use_motion = st.checkbox("Motion blur", True)
+            use_brightness = st.checkbox("Brightness/Contrast", True)
+        with col_c:
+            use_rotate = st.checkbox("Small rotation", True)
+            use_fog = st.checkbox("Light fog", False)
+        
+        st.divider()
+        
+        if st.button("Run Augmentation", type="primary", use_container_width=True):
+            with st.spinner("Augmenting..."):
+                # Save to both source and output_frames directories
+                written = augment_images_in_dir(
+                    aug_target,
+                    output_dir=aug_target,
+                    variants_per_image=variants,
+                    use_gaussian_noise=use_noise,
+                    use_salt_pepper=False,
+                    use_small_rotate=use_rotate,
+                    use_brightness_contrast=use_brightness,
+                    use_gaussian_blur=use_blur,
+                    use_motion_blur=use_motion,
+                    use_fog=use_fog,
+                    use_color_shift=False,
+                )
+                # Also copy augmented images to output_frames
+                output_frames_dir = Path(st.session_state.get("frames_dir", str(FRAMES_DIR))) / "augmented"
+                output_frames_dir.mkdir(parents=True, exist_ok=True)
+                import shutil
+                for img_file in Path(aug_target).glob("*.jpg") + Path(aug_target).glob("*.png"):
+                    if "aug_" in img_file.name or img_file.name.count('_') > 1:
+                        shutil.copy2(img_file, output_frames_dir / img_file.name)
+            st.success(f"✓ Created {written} augmented images and saved to output frames")
+            st.balloons()
+    
+    # TAB 3: IMAGE GALLERY (BEFORE ANNOTATION)
+    with tabs[2]:
+        st.markdown("""
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="section-title">Image Gallery</h3>
+                    <p class="section-desc">Preview your dataset before annotation</p>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        gallery_dir = Path(st.session_state.get("frames_dir", str(FRAMES_DIR)))
+        
+        def list_images(dir_path, limit=12):
+            imgs = []
+            for root, _, files in os.walk(dir_path):
+                for f in files:
+                    if f.lower().endswith((".jpg", ".jpeg", ".png", ".bmp")):
+                        imgs.append(Path(root) / f)
+                        if len(imgs) >= limit:
+                            return imgs
+            return imgs
+        
+        def load_image(path):
+            img = cv2.imread(str(path))
+            if img is None:
+                raise FileNotFoundError(path)
+            return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        
+        sample_count = st.slider("Images to display", 3, 100, 12, 3, key="gallery_sample_count")
+        cols_per_row = st.selectbox("Grid columns", [2, 3, 4, 5], 1, key="gallery_cols_per_row")
+        
+        imgs = list_images(gallery_dir, limit=sample_count)
         if imgs:
-            st.success(f"Displaying {len(imgs)} annotated images in {cols_per_row} columns")
+            st.success(f"Displaying {len(imgs)} images in {cols_per_row} columns")
             cols = st.columns(cols_per_row)
             for i, p in enumerate(imgs):
                 try:
                     pil = load_image(p)
-                    txt = p.with_suffix(".txt")
-                    drawn = draw_yolo_boxes_on_image(pil, txt)
                     with cols[i % cols_per_row]:
-                        st.image(drawn, caption=p.name)
-                except Exception:
+                        st.image(pil, caption=p.name)
+                except Exception as e:
                     with cols[i % cols_per_row]:
                         st.error(f"Failed to load {p.name}")
         else:
-            st.markdown('''
-            <div class="empty-state">
-                <div class="empty-icon">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                    <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
-            </div>
-            <div class="empty-title">No Annotated Images Found</div>
-            <div class="empty-desc">Run the Auto-Annotation step first to generate labels, then return here to preview them.</div>
-        </div>
-        ''', unsafe_allow_html=True)
-
-# Tab 5: LabelImg
-with tabs[4]:
-    st.markdown('''
-    <div class="section-card">
-        <div class="section-header">
-            <div class="section-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                    <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
-                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
-                    <path d="M2 2l7.586 7.586"></path>
-                    <circle cx="11" cy="11" r="2"></circle>
-                </svg>
-            </div>
-            <div>
-                <h3 class="section-title">Manual Refinement with LabelImg</h3>
-                <p class="section-desc">Fine-tune auto-generated annotations using the industry-standard LabelImg tool</p>
+            st.info("No images found. Start by uploading images or extracting frames from a video.")
+    
+    # TAB 4: AUTO-ANNOTATE
+    with tabs[3]:
+        st.markdown("""
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="section-title">AI Auto-Annotation</h3>
+                    <p class="section-desc">YOLO-powered object detection</p>
+                </div>
             </div>
         </div>
-    </div>
-    ''', unsafe_allow_html=True)
-    
-    col_l1, col_l2, col_l3 = st.columns(3)
-    with col_l1:
-        st.metric("Tool", "LabelImg")
-    with col_l2:
-        st.metric("Format", "YOLO/PascalVOC")
-    with col_l3:
-        st.metric("Keyboard", "Shortcuts")
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("#### Quick Reference")
-    st.markdown("""
-    | Shortcut | Action |
-    |----------|--------|
-    | `W` | Create new bounding box |
-    | `D` | Next image |
-    | `A` | Previous image |
-    | `Ctrl+S` | Save annotation |
-    """)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    annot_dir = Path(st.session_state.get("annot_dir", str(ANNOT_DIR)))
-    classes_txt = annot_dir / "classes.txt"
-    img_dir = st.text_input("Images directory", value=str(annot_dir), key="labelimg_dir")
-    
-    if st.button("Launch LabelImg", type="primary"):
-        predef = str(classes_txt) if classes_txt.exists() else ""
+        """, unsafe_allow_html=True)
         
-        def try_cmd(cmd: str) -> bool:
-            try:
-                subprocess.Popen([cmd, img_dir, predef] if predef else [cmd, img_dir])
-                return True
-            except FileNotFoundError:
-                return False
-            except Exception as e:
-                st.error(f"Failed: {e}")
-                return False
+        col_m1, col_m2, col_m3 = st.columns(3)
+        with col_m1:
+            st.metric("Model", "YOLO v11")
+        with col_m2:
+            st.metric("Format", "YOLO TXT")
+        with col_m3:
+            st.metric("GPU", "Enabled")
         
-        if try_cmd("labelImg") or try_cmd("labelimg"):
-            st.success("LabelImg launched successfully. Check for a new window.")
+        annot_dir_input = st.text_input("Annotation directory", value=str(ANNOT_DIR), key="annot_input")
+        
+        # Class Management
+        st.markdown("#### Class Management")
+        CLASSES_TXT = Path(annot_dir_input) / "classes.txt"
+        
+        def load_classes():
+            if CLASSES_TXT.exists():
+                with open(CLASSES_TXT) as f:
+                    return [line.strip() for line in f if line.strip()]
+            return []
+        
+        def save_classes(classes_list):
+            CLASSES_TXT.parent.mkdir(parents=True, exist_ok=True)
+            with open(CLASSES_TXT, "w") as f:
+                f.write("\n".join(classes_list) + "\n" if classes_list else "")
+        
+        current_classes = load_classes()
+        
+        if current_classes:
+            st.write("Current classes:", ", ".join(current_classes))
+        
+        col_add, col_remove = st.columns(2)
+        with col_add:
+            new_class = st.text_input("Add class", placeholder="class name")
+            if st.button("Add", key="add_class"):
+                if new_class.strip() and new_class.lower() not in [c.lower() for c in current_classes]:
+                    current_classes.append(new_class.lower())
+                    save_classes(current_classes)
+                    st.rerun()
+        
+        with col_remove:
+            if current_classes:
+                cls_remove = st.selectbox("Remove class", current_classes, key="remove_class_sel")
+                if st.button("Remove", key="remove_class"):
+                    current_classes.remove(cls_remove)
+                    save_classes(current_classes)
+                    st.rerun()
+        
+        st.divider()
+        
+        if st.button("Run Auto-Annotation", type="primary"):
+            frames_dir = Path(st.session_state.get("frames_dir", str(FRAMES_DIR)))
+            annot_dir = Path(annot_dir_input)
+            
+            def list_images(dir_path, limit=30):
+                imgs = []
+                for root, _, files in os.walk(dir_path):
+                    for f in files:
+                        if f.lower().endswith((".jpg", ".jpeg", ".png", ".bmp")):
+                            imgs.append(Path(root) / f)
+                            if len(imgs) >= limit:
+                                return imgs
+                return imgs
+            
+            frames_list = list_images(frames_dir)
+            if not frames_list:
+                st.error(f"❌ No frames found in {frames_dir}")
+            else:
+                st.info(f"Found {len(frames_list)} frames. Starting annotation...")
+                with st.spinner("Running YOLO inference..."):
+                    proc = subprocess.run(
+                        [sys.executable, "auto_annotation.py", "--frames-dir", str(frames_dir), "--annot-dir", str(annot_dir)],
+                        cwd=str(BASE_DIR),
+                        capture_output=True,
+                        text=True,
+                    )
+                
+                if proc.returncode == 0:
+                    st.success("✓ Auto-annotation completed!")
+                    st.balloons()
+                else:
+                    st.error(f"❌ Failed with code {proc.returncode}")
+    
+    # TAB 5: ANNOTATED GALLERY (AFTER ANNOTATION)
+    with tabs[4]:
+        st.markdown("""
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="section-title">Annotated Gallery</h3>
+                    <p class="section-desc">Review annotated images with bounding boxes</p>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        preview_dir = Path(st.session_state.get("annot_dir", str(ANNOT_DIR)))
+        
+        def list_images(dir_path, limit=12):
+            imgs = []
+            for root, _, files in os.walk(dir_path):
+                for f in files:
+                    if f.lower().endswith((".jpg", ".jpeg", ".png", ".bmp")):
+                        imgs.append(Path(root) / f)
+                        if len(imgs) >= limit:
+                            return imgs
+            return imgs
+        
+        def load_image(path):
+            img = cv2.imread(str(path))
+            if img is None:
+                raise FileNotFoundError(path)
+            return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        
+        def draw_boxes(img_pil, txt_path):
+            img = np.array(img_pil).copy()
+            h, w = img.shape[:2]
+            if not txt_path.exists():
+                return Image.fromarray(img)
+            with open(txt_path) as f:
+                lines = [ln.strip() for ln in f if ln.strip()]
+            for ln in lines:
+                parts = ln.split()
+                if len(parts) != 5:
+                    continue
+                _, cx, cy, bw, bh = map(float, parts)
+                x, y = int((cx - bw / 2) * w), int((cy - bh / 2) * h)
+                x2, y2 = int((cx + bw / 2) * w), int((cy + bh / 2) * h)
+                cv2.rectangle(img, (x, y), (x2, y2), (0, 255, 0), 2)
+            return Image.fromarray(img)
+        
+        sample_count = st.slider("Images to display", 3, 100, 12, 3, key="annotated_sample_count")
+        cols_per_row = st.selectbox("Grid columns", [2, 3, 4, 5], 1, key="annotated_cols_per_row")
+        
+        imgs = list_images(preview_dir, limit=sample_count)
+        if imgs:
+            st.success(f"Displaying {len(imgs)} images in {cols_per_row} columns")
+            cols = st.columns(cols_per_row)
+            for i, p in enumerate(imgs):
+                try:
+                    pil = load_image(p)
+                    drawn = draw_boxes(pil, p.with_suffix(".txt"))
+                    with cols[i % cols_per_row]:
+                        st.image(drawn, caption=p.name)
+                except Exception as e:
+                    with cols[i % cols_per_row]:
+                        st.error(f"Failed to load {p.name}")
         else:
-            st.error("LabelImg not found. Install with: pip install labelImg")
+            st.info("No annotated images yet")
 
+# MODEL COMPARE PAGE
+elif current_page == "Model Compare":
+    st.markdown("""
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 1v6m0 6v6m5.2-13.2l-4.2 4.2m0 6l4.2 4.2M23 12h-6m-6 0H5m13.2 5.2l-4.2-4.2m0-6l4.2-4.2"></path>
+        </svg>
+        <h1 style="color: #f8fafc; margin: 0; font-weight: 800;">Model Compare</h1>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown("""
+    <div class="panel-blue">
+        <h2>Compare YOLO Models</h2>
+        <p>Analyze and compare different model versions side-by-side.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("Model 1", "YOLO v12s")
+    with col2:
+        st.metric("Model 2", "YOLO v11n")
+    
+    st.info("Coming soon: Compare inference speed, accuracy, and resource usage")
+
+# ANALYTICS PAGE
+elif current_page == "Analytics":
+    st.title("� Analytics")
+    st.markdown("""
+    <div class="panel-blue">
+        <h2>Annotation Analytics</h2>
+        <p>Monitor annotation progress and model performance metrics.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total Frames", "0")
+    with col2:
+        st.metric("Annotated", "0%")
+    with col3:
+        st.metric("Classes", "0")
+    
+    st.info("Coming soon: Detailed analytics dashboard with charts and statistics")
+
+# Footer
 st.markdown("---")
 st.markdown("""
 <div class="app-footer">
@@ -1622,7 +1677,7 @@ st.markdown("""
                 <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
             </svg>
         </div>
-        <span class="footer-name">ARAS Auto-Annotation Studio</span>
+        <span class="footer-name">Percieva<sup>TM</sup> Auto-Annotation Studio</span>
     </div>
     <p class="footer-tagline">Streamlined annotation workflow for computer vision teams</p>
     <div class="footer-tech">
