@@ -1413,24 +1413,25 @@ if current_page == "Annotate":
         gallery_dir = Path(st.session_state.get("frames_dir", str(FRAMES_DIR)))
         IMAGES_PER_PAGE = 12
         
-        def get_all_images(dir_path):
+        def get_all_images_gallery(dir_path):
             imgs = []
-            for root, _, files in os.walk(dir_path):
-                for f in sorted(files):
-                    if f.lower().endswith((".jpg", ".jpeg", ".png", ".bmp")):
-                        imgs.append(Path(root) / f)
+            if dir_path.exists():
+                for root, _, files in os.walk(dir_path):
+                    for f in sorted(files):
+                        if f.lower().endswith((".jpg", ".jpeg", ".png", ".bmp")):
+                            imgs.append(Path(root) / f)
             return sorted(imgs)
         
-        def load_image(path):
+        def load_image_gallery(path):
             img = cv2.imread(str(path))
             if img is None:
-                raise FileNotFoundError(path)
+                return None
             return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
         
         cols_per_row = st.selectbox("Grid columns", [2, 3, 4, 5], 1, key="gallery_cols_per_row")
         
-        all_imgs = get_all_images(gallery_dir)
-        total_pages = (len(all_imgs) + IMAGES_PER_PAGE - 1) // IMAGES_PER_PAGE
+        all_imgs = get_all_images_gallery(gallery_dir)
+        total_pages = max(1, (len(all_imgs) + IMAGES_PER_PAGE - 1) // IMAGES_PER_PAGE)
         
         if "gallery_page" not in st.session_state:
             st.session_state["gallery_page"] = 1
@@ -1441,7 +1442,7 @@ if current_page == "Annotate":
             # Pagination controls
             col_prev, col_page, col_next = st.columns([1, 3, 1])
             with col_prev:
-                if st.button("← Previous", key="gallery_prev", use_container_width=True):
+                if st.button("← Previous", key="gallery_prev_btn"):
                     if st.session_state["gallery_page"] > 1:
                         st.session_state["gallery_page"] -= 1
                         st.rerun()
@@ -1451,14 +1452,17 @@ if current_page == "Annotate":
                 current_page = st.selectbox(
                     "Page",
                     pages,
-                    index=st.session_state["gallery_page"] - 1,
-                    key="gallery_page_select"
+                    index=min(st.session_state["gallery_page"] - 1, len(pages) - 1),
+                    key="gallery_page_select",
+                    label_visibility="collapsed"
                 )
-                st.session_state["gallery_page"] = current_page
+                if current_page != st.session_state["gallery_page"]:
+                    st.session_state["gallery_page"] = current_page
+                    st.rerun()
                 st.write(f"Page {st.session_state['gallery_page']} of {total_pages}")
             
             with col_next:
-                if st.button("Next →", key="gallery_next", use_container_width=True):
+                if st.button("Next →", key="gallery_next_btn"):
                     if st.session_state["gallery_page"] < total_pages:
                         st.session_state["gallery_page"] += 1
                         st.rerun()
@@ -1467,26 +1471,28 @@ if current_page == "Annotate":
             
             # Display images for current page
             start_idx = (st.session_state["gallery_page"] - 1) * IMAGES_PER_PAGE
-            end_idx = start_idx + IMAGES_PER_PAGE
+            end_idx = min(start_idx + IMAGES_PER_PAGE, len(all_imgs))
             page_imgs = all_imgs[start_idx:end_idx]
             
-            st.write(f"Displaying images {start_idx + 1}-{min(end_idx, len(all_imgs))} in {cols_per_row} columns")
+            st.write(f"Displaying images {start_idx + 1}-{end_idx} of {len(all_imgs)}")
             cols = st.columns(cols_per_row)
             
             for i, p in enumerate(page_imgs):
-                try:
-                    pil = load_image(p)
-                    with cols[i % cols_per_row]:
-                        st.image(pil, caption=p.name, use_column_width=True)
-                        if st.button("🗑 Delete", key=f"del_gallery_{p.name}", use_container_width=True):
-                            try:
-                                p.unlink()
-                                st.success(f"Deleted {p.name}")
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"Failed to delete: {e}")
-                except Exception as e:
-                    with cols[i % cols_per_row]:
+                col_idx = i % cols_per_row
+                with cols[col_idx]:
+                    pil = load_image_gallery(p)
+                    if pil:
+                        st.image(pil, caption=p.name)
+                        col1, col2 = st.columns([4, 1])
+                        with col2:
+                            if st.button("🗑", key=f"del_gallery_{i}_{start_idx}", help="Delete image"):
+                                try:
+                                    p.unlink()
+                                    st.success(f"Deleted {p.name}")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Error: {str(e)[:50]}")
+                    else:
                         st.error(f"Failed to load {p.name}")
         else:
             st.info("No images found. Start by uploading images or extracting frames from a video.")
@@ -1614,41 +1620,45 @@ if current_page == "Annotate":
         preview_dir = Path(st.session_state.get("annot_dir", str(ANNOT_DIR)))
         ANNOTATED_IMAGES_PER_PAGE = 12
         
-        def get_all_annotated_images(dir_path):
+        def get_all_annotated_images_ann(dir_path):
             imgs = []
-            for root, _, files in os.walk(dir_path):
-                for f in sorted(files):
-                    if f.lower().endswith((".jpg", ".jpeg", ".png", ".bmp")):
-                        imgs.append(Path(root) / f)
+            if dir_path.exists():
+                for root, _, files in os.walk(dir_path):
+                    for f in sorted(files):
+                        if f.lower().endswith((".jpg", ".jpeg", ".png", ".bmp")):
+                            imgs.append(Path(root) / f)
             return sorted(imgs)
         
-        def load_image(path):
+        def load_image_ann(path):
             img = cv2.imread(str(path))
             if img is None:
-                raise FileNotFoundError(path)
+                return None
             return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
         
-        def draw_boxes(img_pil, txt_path):
+        def draw_boxes_ann(img_pil, txt_path):
             img = np.array(img_pil).copy()
             h, w = img.shape[:2]
-            if not txt_path.exists():
-                return Image.fromarray(img)
-            with open(txt_path) as f:
-                lines = [ln.strip() for ln in f if ln.strip()]
-            for ln in lines:
-                parts = ln.split()
-                if len(parts) != 5:
-                    continue
-                _, cx, cy, bw, bh = map(float, parts)
-                x, y = int((cx - bw / 2) * w), int((cy - bh / 2) * h)
-                x2, y2 = int((cx + bw / 2) * w), int((cy + bh / 2) * h)
-                cv2.rectangle(img, (x, y), (x2, y2), (0, 255, 0), 2)
+            if txt_path.exists():
+                try:
+                    with open(txt_path) as f:
+                        lines = [ln.strip() for ln in f if ln.strip()]
+                    for ln in lines:
+                        parts = ln.split()
+                        if len(parts) == 5:
+                            _, cx, cy, bw, bh = map(float, parts)
+                            x = int((cx - bw / 2) * w)
+                            y = int((cy - bh / 2) * h)
+                            x2 = int((cx + bw / 2) * w)
+                            y2 = int((cy + bh / 2) * h)
+                            cv2.rectangle(img, (x, y), (x2, y2), (0, 255, 0), 2)
+                except:
+                    pass
             return Image.fromarray(img)
         
         cols_per_row = st.selectbox("Grid columns", [2, 3, 4, 5], 1, key="annotated_cols_per_row")
         
-        all_annotated_imgs = get_all_annotated_images(preview_dir)
-        total_annotated_pages = (len(all_annotated_imgs) + ANNOTATED_IMAGES_PER_PAGE - 1) // ANNOTATED_IMAGES_PER_PAGE
+        all_annotated_imgs = get_all_annotated_images_ann(preview_dir)
+        total_annotated_pages = max(1, (len(all_annotated_imgs) + ANNOTATED_IMAGES_PER_PAGE - 1) // ANNOTATED_IMAGES_PER_PAGE)
         
         if "annotated_page" not in st.session_state:
             st.session_state["annotated_page"] = 1
@@ -1659,7 +1669,7 @@ if current_page == "Annotate":
             # Pagination controls
             col_prev, col_page, col_next = st.columns([1, 3, 1])
             with col_prev:
-                if st.button("← Previous", key="annotated_prev", use_container_width=True):
+                if st.button("← Previous", key="annotated_prev_btn"):
                     if st.session_state["annotated_page"] > 1:
                         st.session_state["annotated_page"] -= 1
                         st.rerun()
@@ -1669,14 +1679,17 @@ if current_page == "Annotate":
                 current_page = st.selectbox(
                     "Page",
                     pages,
-                    index=st.session_state["annotated_page"] - 1,
-                    key="annotated_page_select"
+                    index=min(st.session_state["annotated_page"] - 1, len(pages) - 1),
+                    key="annotated_page_select",
+                    label_visibility="collapsed"
                 )
-                st.session_state["annotated_page"] = current_page
+                if current_page != st.session_state["annotated_page"]:
+                    st.session_state["annotated_page"] = current_page
+                    st.rerun()
                 st.write(f"Page {st.session_state['annotated_page']} of {total_annotated_pages}")
             
             with col_next:
-                if st.button("Next →", key="annotated_next", use_container_width=True):
+                if st.button("Next →", key="annotated_next_btn"):
                     if st.session_state["annotated_page"] < total_annotated_pages:
                         st.session_state["annotated_page"] += 1
                         st.rerun()
@@ -1685,30 +1698,32 @@ if current_page == "Annotate":
             
             # Display images for current page
             start_idx = (st.session_state["annotated_page"] - 1) * ANNOTATED_IMAGES_PER_PAGE
-            end_idx = start_idx + ANNOTATED_IMAGES_PER_PAGE
+            end_idx = min(start_idx + ANNOTATED_IMAGES_PER_PAGE, len(all_annotated_imgs))
             page_annotated_imgs = all_annotated_imgs[start_idx:end_idx]
             
-            st.write(f"Displaying images {start_idx + 1}-{min(end_idx, len(all_annotated_imgs))} in {cols_per_row} columns")
+            st.write(f"Displaying images {start_idx + 1}-{end_idx} of {len(all_annotated_imgs)}")
             cols = st.columns(cols_per_row)
             
             for i, p in enumerate(page_annotated_imgs):
-                try:
-                    pil = load_image(p)
-                    drawn = draw_boxes(pil, p.with_suffix(".txt"))
-                    with cols[i % cols_per_row]:
-                        st.image(drawn, caption=p.name, use_column_width=True)
-                        if st.button("🗑 Delete", key=f"del_annotated_{p.name}", use_container_width=True):
-                            try:
-                                txt_file = p.with_suffix(".txt")
-                                p.unlink()
-                                if txt_file.exists():
-                                    txt_file.unlink()
-                                st.success(f"Deleted {p.name} and annotation")
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"Failed to delete: {e}")
-                except Exception as e:
-                    with cols[i % cols_per_row]:
+                col_idx = i % cols_per_row
+                with cols[col_idx]:
+                    pil = load_image_ann(p)
+                    if pil:
+                        drawn = draw_boxes_ann(pil, p.with_suffix(".txt"))
+                        st.image(drawn, caption=p.name)
+                        col1, col2 = st.columns([4, 1])
+                        with col2:
+                            if st.button("🗑", key=f"del_annotated_{i}_{start_idx}", help="Delete image and annotation"):
+                                try:
+                                    txt_file = p.with_suffix(".txt")
+                                    p.unlink()
+                                    if txt_file.exists():
+                                        txt_file.unlink()
+                                    st.success(f"Deleted {p.name}")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Error: {str(e)[:50]}")
+                    else:
                         st.error(f"Failed to load {p.name}")
         else:
             st.info("No annotated images yet")
