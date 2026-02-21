@@ -14,9 +14,11 @@ import shutil
 import zipfile
 import subprocess
 from pathlib import Path
+from datetime import datetime
 
 import cv2
 import numpy as np
+import pandas as pd
 from PIL import Image
 
 from data_augmentation import (
@@ -1036,6 +1038,185 @@ div[data-testid="stRadio"]:has(input[name="nav_page"]) input:checked + div {
     opacity: 0.95;
 }
 
+/* ===== GALLERY STYLING ===== */
+.gallery-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.gallery-image-wrapper {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.8) 100%);
+    border: 1.5px solid rgba(148, 163, 184, 0.2);
+    border-radius: 18px;
+    padding: 1rem;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+
+.gallery-image-wrapper:hover {
+    border-color: rgba(6, 182, 212, 0.5);
+    box-shadow: 0 12px 40px rgba(6, 182, 212, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+}
+
+.gallery-image-wrapper img {
+    border-radius: 14px;
+    width: 100%;
+    display: block;
+}
+
+.gallery-delete-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(239, 68, 68, 0.9) !important;
+    border: none !important;
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4) !important;
+    z-index: 10;
+}
+
+.gallery-delete-btn:hover {
+    background: rgba(220, 38, 38, 0.95) !important;
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6) !important;
+}
+
+.gallery-delete-btn:active {
+    transform: scale(0.95);
+}
+
+.gallery-delete-btn span,
+.gallery-delete-btn div,
+.gallery-delete-btn p {
+    color: #ffffff !important;
+    font-size: 1.2rem !important;
+    font-weight: 700 !important;
+}
+
+.gallery-info-text {
+    color: #cbd5e1 !important;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin: 0.5rem 0 1rem 0;
+    text-align: center;
+}
+
+.gallery-pagination {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 14px;
+    padding: 0.75rem 1rem;
+    margin: 1.5rem 0;
+    backdrop-filter: blur(10px);
+}
+
+.gallery-pagination button {
+    background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 0.5rem 1rem !important;
+    font-weight: 700 !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3) !important;
+}
+
+.gallery-pagination button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4) !important;
+}
+
+/* Gallery Delete Button Styling */
+[data-testid="baseButton-secondary"] {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(6, 182, 212, 0.05) 100%) !important;
+    border: 1.5px solid rgba(139, 92, 246, 0.3) !important;
+    color: #cbd5e1 !important;
+    font-weight: 600 !important;
+    border-radius: 10px !important;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    padding: 0.6rem 1.2rem !important;
+}
+
+[data-testid="baseButton-secondary"]:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.05) 100%) !important;
+    border-color: rgba(239, 68, 68, 0.5) !important;
+    color: #ef4444 !important;
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.2) !important;
+    transform: translateY(-2px) !important;
+}
+
+.gallery-image-container {
+    position: relative;
+    width: 100%;
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.gallery-image-container:hover .gallery-image-actions {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.gallery-image-actions {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+}
+
+.gallery-btn {
+    background: rgba(30, 41, 59, 0.9) !important;
+    border: 1px solid rgba(6, 182, 212, 0.4) !important;
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.gallery-btn:hover {
+    background: rgba(6, 182, 212, 0.9) !important;
+    border-color: rgba(139, 92, 246, 0.6) !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4) !important;
+}
+
+.gallery-delete-btn-hover {
+    background: rgba(239, 68, 68, 0.9) !important;
+    border: 1px solid rgba(239, 68, 68, 0.6) !important;
+}
+
+.gallery-delete-btn-hover:hover {
+    background: rgba(220, 38, 38, 0.95) !important;
+    border-color: rgba(239, 68, 68, 0.8) !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5) !important;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
     .hero-title {
@@ -1061,7 +1242,7 @@ if "nav_page" not in st.session_state:
 # PAGE NAVIGATION - Using Query Params
 # ============================================================================
 page_param = st.query_params.get("page", "annotate")
-current_page = "Annotate" if page_param == "annotate" else "Model Compare" if page_param == "model" else "Analytics"
+current_page = "Annotate" if page_param == "annotate" else "Comparison" if page_param == "model" else "Analysis"
 
 # Sidebar Navigation
 with st.sidebar:
@@ -1126,7 +1307,7 @@ with st.sidebar:
         if annotate_active:
             st.markdown('<div style="height: 2px; background: linear-gradient(90deg, #06b6d4, #8b5cf6); margin-top: -8px; border-radius: 1px;"></div>', unsafe_allow_html=True)
     
-    # Model Compare Button
+    # Comparison Button
     model_active = page_param == "model"
     col1, col2 = st.columns([0.15, 0.85])
     with col1:
@@ -1137,13 +1318,13 @@ with st.sidebar:
         </svg>
         """, unsafe_allow_html=True)
     with col2:
-        if st.button("Model Compare", key="nav_model", use_container_width=True):
+        if st.button("Comparison", key="nav_model", use_container_width=True):
             st.query_params["page"] = "model"
             st.rerun()
         if model_active:
             st.markdown('<div style="height: 2px; background: linear-gradient(90deg, #06b6d4, #8b5cf6); margin-top: -8px; border-radius: 1px;"></div>', unsafe_allow_html=True)
     
-    # Analytics Button
+    # Analysis Button
     analytics_active = page_param == "analytics"
     col1, col2 = st.columns([0.15, 0.85])
     with col1:
@@ -1155,7 +1336,7 @@ with st.sidebar:
         </svg>
         """, unsafe_allow_html=True)
     with col2:
-        if st.button("Analytics", key="nav_analytics", use_container_width=True):
+        if st.button("Analysis", key="nav_analytics", use_container_width=True):
             st.query_params["page"] = "analytics"
             st.rerun()
         if analytics_active:
@@ -1404,7 +1585,7 @@ if current_page == "Annotate":
                 </div>
                 <div>
                     <h3 class="section-title">Image Gallery</h3>
-                    <p class="section-desc">Preview your dataset before annotation</p>
+                    <p class="section-desc">Preview and manage your dataset before annotation</p>
                 </div>
             </div>
         </div>
@@ -1413,6 +1594,11 @@ if current_page == "Annotate":
         gallery_dir = Path(st.session_state.get("frames_dir", str(FRAMES_DIR)))
         IMAGES_PER_PAGE = 12
         
+        def natural_sort_key(path):
+            import re
+            name = path.name
+            return [int(s) if s.isdigit() else s.lower() for s in re.split(r'(\d+)', name)]
+        
         def get_all_images_gallery(dir_path):
             imgs = []
             if dir_path.exists():
@@ -1420,7 +1606,7 @@ if current_page == "Annotate":
                     for f in sorted(files):
                         if f.lower().endswith((".jpg", ".jpeg", ".png", ".bmp")):
                             imgs.append(Path(root) / f)
-            return sorted(imgs)
+            return sorted(imgs, key=natural_sort_key)
         
         def load_image_gallery(path):
             img = cv2.imread(str(path))
@@ -1437,35 +1623,39 @@ if current_page == "Annotate":
             st.session_state["gallery_page"] = 1
         
         if all_imgs:
-            st.success(f"Total images: {len(all_imgs)}")
+            st.markdown(f"""
+            <div style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; backdrop-filter: blur(5px);">
+                <p style="color: #cbd5e1; margin: 0; font-weight: 600;">📊 Total images: <span style="color: #06b6d4; font-weight: 800;">{len(all_imgs)}</span></p>
+            </div>
+            """, unsafe_allow_html=True)
             
-            # Pagination controls
-            col_prev, col_page, col_next = st.columns([1, 3, 1])
+            # Pagination controls with buttons that work immediately
+            col_prev, col_page, col_next = st.columns([0.8, 2, 0.8])
             with col_prev:
-                if st.button("← Previous", key="gallery_prev_btn"):
+                def on_prev_click():
                     if st.session_state["gallery_page"] > 1:
                         st.session_state["gallery_page"] -= 1
-                        st.rerun()
+                st.button("◀ Previous", key="gallery_prev_btn", use_container_width=True, on_click=on_prev_click)
             
             with col_page:
                 pages = list(range(1, total_pages + 1))
+                def on_page_change():
+                    st.session_state["gallery_page"] = st.session_state["gallery_page_select"]
                 current_page = st.selectbox(
                     "Page",
                     pages,
                     index=min(st.session_state["gallery_page"] - 1, len(pages) - 1),
                     key="gallery_page_select",
-                    label_visibility="collapsed"
+                    label_visibility="collapsed",
+                    on_change=on_page_change
                 )
-                if current_page != st.session_state["gallery_page"]:
-                    st.session_state["gallery_page"] = current_page
-                    st.rerun()
-                st.write(f"Page {st.session_state['gallery_page']} of {total_pages}")
+                st.markdown(f"<p style='text-align: center; color: #94a3b8; margin: 0.5rem 0; font-size: 0.9rem;'>Page <span style='color: #06b6d4; font-weight: 800;'>{st.session_state['gallery_page']}</span> of <span style='color: #8b5cf6; font-weight: 800;'>{total_pages}</span></p>", unsafe_allow_html=True)
             
             with col_next:
-                if st.button("Next →", key="gallery_next_btn"):
+                def on_next_click():
                     if st.session_state["gallery_page"] < total_pages:
                         st.session_state["gallery_page"] += 1
-                        st.rerun()
+                st.button("Next ▶", key="gallery_next_btn", use_container_width=True, on_click=on_next_click)
             
             st.divider()
             
@@ -1474,7 +1664,7 @@ if current_page == "Annotate":
             end_idx = min(start_idx + IMAGES_PER_PAGE, len(all_imgs))
             page_imgs = all_imgs[start_idx:end_idx]
             
-            st.write(f"Displaying images {start_idx + 1}-{end_idx} of {len(all_imgs)}")
+            st.markdown(f"<p class='gallery-info-text'>Displaying images {start_idx + 1}-{end_idx} of {len(all_imgs)} • {cols_per_row} columns</p>", unsafe_allow_html=True)
             cols = st.columns(cols_per_row)
             
             for i, p in enumerate(page_imgs):
@@ -1482,20 +1672,28 @@ if current_page == "Annotate":
                 with cols[col_idx]:
                     pil = load_image_gallery(p)
                     if pil:
-                        st.image(pil, caption=p.name)
-                        col1, col2 = st.columns([4, 1])
-                        with col2:
-                            if st.button("🗑", key=f"del_gallery_{i}_{start_idx}", help="Delete image"):
+                        st.image(pil, use_container_width=True)
+                        
+                        # Delete button below image - neatly placed and centered
+                        st.markdown('<div style="text-align: center; margin-top: 0.5rem;"></div>', unsafe_allow_html=True)
+                        col_spacer1, col_del, col_spacer2 = st.columns([1, 2, 1])
+                        with col_del:
+                            if st.button("🗑️ Delete", key=f"del_gallery_{i}_{start_idx}", use_container_width=True, help=f"Delete {p.name}"):
                                 try:
                                     p.unlink()
-                                    st.success(f"Deleted {p.name}")
+                                    st.success(f"✓ Deleted {p.name}")
                                     st.rerun()
                                 except Exception as e:
                                     st.error(f"Error: {str(e)[:50]}")
                     else:
                         st.error(f"Failed to load {p.name}")
         else:
-            st.info("No images found. Start by uploading images or extracting frames from a video.")
+            st.markdown("""
+            <div style="text-align: center; padding: 2rem; background: rgba(15, 23, 42, 0.4); border: 2px dashed rgba(148, 163, 184, 0.2); border-radius: 16px;">
+                <p style="color: #94a3b8; font-size: 1.1rem; margin: 0;">📷 No images found</p>
+                <p style="color: #64748b; font-size: 0.9rem; margin: 0.5rem 0 0 0;">Start by uploading images or extracting frames from a video</p>
+            </div>
+            """, unsafe_allow_html=True)
     
     # TAB 4: AUTO-ANNOTATE
     with tabs[3]:
@@ -1627,7 +1825,7 @@ if current_page == "Annotate":
                     for f in sorted(files):
                         if f.lower().endswith((".jpg", ".jpeg", ".png", ".bmp")):
                             imgs.append(Path(root) / f)
-            return sorted(imgs)
+            return sorted(imgs, key=natural_sort_key)
         
         def load_image_ann(path):
             img = cv2.imread(str(path))
@@ -1664,35 +1862,39 @@ if current_page == "Annotate":
             st.session_state["annotated_page"] = 1
         
         if all_annotated_imgs:
-            st.success(f"Total annotated images: {len(all_annotated_imgs)}")
+            st.markdown(f"""
+            <div style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; backdrop-filter: blur(5px);">
+                <p style="color: #cbd5e1; margin: 0; font-weight: 600;">🏷️ Total annotated images: <span style="color: #06b6d4; font-weight: 800;">{len(all_annotated_imgs)}</span></p>
+            </div>
+            """, unsafe_allow_html=True)
             
-            # Pagination controls
-            col_prev, col_page, col_next = st.columns([1, 3, 1])
+            # Pagination controls with callbacks
+            col_prev, col_page, col_next = st.columns([0.8, 2, 0.8])
             with col_prev:
-                if st.button("← Previous", key="annotated_prev_btn"):
+                def on_prev_click_ann():
                     if st.session_state["annotated_page"] > 1:
                         st.session_state["annotated_page"] -= 1
-                        st.rerun()
+                st.button("◀ Previous", key="annotated_prev_btn", use_container_width=True, on_click=on_prev_click_ann)
             
             with col_page:
                 pages = list(range(1, total_annotated_pages + 1))
+                def on_page_change_ann():
+                    st.session_state["annotated_page"] = st.session_state["annotated_page_select"]
                 current_page = st.selectbox(
                     "Page",
                     pages,
                     index=min(st.session_state["annotated_page"] - 1, len(pages) - 1),
                     key="annotated_page_select",
-                    label_visibility="collapsed"
+                    label_visibility="collapsed",
+                    on_change=on_page_change_ann
                 )
-                if current_page != st.session_state["annotated_page"]:
-                    st.session_state["annotated_page"] = current_page
-                    st.rerun()
-                st.write(f"Page {st.session_state['annotated_page']} of {total_annotated_pages}")
+                st.markdown(f"<p style='text-align: center; color: #94a3b8; margin: 0.5rem 0; font-size: 0.9rem;'>Page <span style='color: #06b6d4; font-weight: 800;'>{st.session_state['annotated_page']}</span> of <span style='color: #8b5cf6; font-weight: 800;'>{total_annotated_pages}</span></p>", unsafe_allow_html=True)
             
             with col_next:
-                if st.button("Next →", key="annotated_next_btn"):
+                def on_next_click_ann():
                     if st.session_state["annotated_page"] < total_annotated_pages:
                         st.session_state["annotated_page"] += 1
-                        st.rerun()
+                st.button("Next ▶", key="annotated_next_btn", use_container_width=True, on_click=on_next_click_ann)
             
             st.divider()
             
@@ -1701,7 +1903,7 @@ if current_page == "Annotate":
             end_idx = min(start_idx + ANNOTATED_IMAGES_PER_PAGE, len(all_annotated_imgs))
             page_annotated_imgs = all_annotated_imgs[start_idx:end_idx]
             
-            st.write(f"Displaying images {start_idx + 1}-{end_idx} of {len(all_annotated_imgs)}")
+            st.markdown(f"<p class='gallery-info-text'>Displaying images {start_idx + 1}-{end_idx} of {len(all_annotated_imgs)} • {cols_per_row} columns</p>", unsafe_allow_html=True)
             cols = st.columns(cols_per_row)
             
             for i, p in enumerate(page_annotated_imgs):
@@ -1710,16 +1912,19 @@ if current_page == "Annotate":
                     pil = load_image_ann(p)
                     if pil:
                         drawn = draw_boxes_ann(pil, p.with_suffix(".txt"))
-                        st.image(drawn, caption=p.name)
-                        col1, col2 = st.columns([4, 1])
-                        with col2:
-                            if st.button("🗑", key=f"del_annotated_{i}_{start_idx}", help="Delete image and annotation"):
+                        st.image(drawn, use_container_width=True)
+                        
+                        # Delete button below image - neatly placed and centered
+                        st.markdown('<div style="text-align: center; margin-top: 0.5rem;"></div>', unsafe_allow_html=True)
+                        col_spacer1, col_del, col_spacer2 = st.columns([1, 2, 1])
+                        with col_del:
+                            if st.button("🗑️ Delete", key=f"del_annotated_{i}_{start_idx}", use_container_width=True, help="Delete image and annotation"):
                                 try:
                                     txt_file = p.with_suffix(".txt")
                                     p.unlink()
                                     if txt_file.exists():
                                         txt_file.unlink()
-                                    st.success(f"Deleted {p.name}")
+                                    st.success(f"✓ Deleted {p.name}")
                                     st.rerun()
                                 except Exception as e:
                                     st.error(f"Error: {str(e)[:50]}")
@@ -1728,51 +1933,943 @@ if current_page == "Annotate":
         else:
             st.info("No annotated images yet")
 
-# MODEL COMPARE PAGE
-elif current_page == "Model Compare":
+# COMPARISON PAGE
+elif current_page == "Comparison":
     st.markdown("""
-    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M12 1v6m0 6v6m5.2-13.2l-4.2 4.2m0 6l4.2 4.2M23 12h-6m-6 0H5m13.2 5.2l-4.2-4.2m0-6l4.2-4.2"></path>
-        </svg>
-        <h1 style="color: #f8fafc; margin: 0; font-weight: 800;">Model Compare</h1>
-    </div>
-    """, unsafe_allow_html=True)
-    st.markdown("""
-    <div class="panel-blue">
-        <h2>Compare YOLO Models</h2>
-        <p>Analyze and compare different model versions side-by-side.</p>
+    <div class="hero-header">
+        <h1 class="hero-title">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:8px;">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 1v6m0 6v6m5.2-13.2l-4.2 4.2m0 6l4.2 4.2M23 12h-6m-6 0H5m13.2 5.2l-4.2-4.2m0-6l4.2-4.2"></path>
+            </svg>
+            Comparison
+        </h1>
+        <p class="hero-subtitle">Benchmark YOLO models against ground truth with clear per-class insights</p>
+        <div class="hero-badges">
+            <span class="hero-badge">Ground Truth Eval</span>
+            <span class="hero-badge">Per-Class Matrix</span>
+            <span class="hero-badge">Metrics Timeline</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("Model 1", "YOLO v12s")
-    with col2:
-        st.metric("Model 2", "YOLO v11n")
+    # Paths - Comparison folder structure
+    COMPARE_BASE_DIR = Path(__file__).resolve().parent / "Model_Compare"
+    MODELS_DIR = COMPARE_BASE_DIR / "model"
+    NEW_MODEL_DIR = COMPARE_BASE_DIR / "new_model"
+    GROUND_TRUTH_DIR = COMPARE_BASE_DIR / "ground_truth"
+    COMPARE_OUTPUT_DIR = COMPARE_BASE_DIR / "output"
+    METRICS_CSV = COMPARE_BASE_DIR / "metrics.csv"
     
-    st.info("Coming soon: Compare inference speed, accuracy, and resource usage")
+    # Create directories if they don't exist
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    NEW_MODEL_DIR.mkdir(parents=True, exist_ok=True)
+    COMPARE_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    
+    # Helper functions
+    def get_available_models():
+        models = []
+        # Get models from model folder (looking for .pt files)
+        if MODELS_DIR.exists():
+            pt_files = sorted(MODELS_DIR.glob("*.pt"))
+            for pt_file in pt_files:
+                model_name = pt_file.stem  # Get filename without extension (v1, v2, etc.)
+                models.append(model_name)
+        # Add new_model if it has .pt files
+        if NEW_MODEL_DIR.exists():
+            new_pt_files = list(NEW_MODEL_DIR.glob("*.pt"))
+            if new_pt_files:
+                models.insert(0, "Latest (new_model)")
+        return models
+    
+    def get_model_output_frames(model_name):
+        """Get comparison output frames for a model"""
+        # Handle "Latest (new_model)" special case
+        if model_name == "Latest (new_model)":
+            model_output_dir = COMPARE_OUTPUT_DIR / "new_model"
+        else:
+            model_output_dir = COMPARE_OUTPUT_DIR / model_name
+        
+        if model_output_dir.exists():
+            frames = sorted(model_output_dir.glob("*.jpg")) + sorted(model_output_dir.glob("*.png"))
+            return frames[:6]  # Return first 6 frames for preview
+        return []
 
-# ANALYTICS PAGE
-elif current_page == "Analytics":
-    st.title("� Analytics")
+    def get_latest_new_model_info():
+        if not NEW_MODEL_DIR.exists():
+            return None
+        latest_models = sorted(NEW_MODEL_DIR.glob("*.pt"), key=lambda p: p.stat().st_mtime)
+        if not latest_models:
+            return None
+        latest = latest_models[-1]
+        return {
+            "name": latest.stem,
+            "path": latest,
+            "updated": datetime.fromtimestamp(latest.stat().st_mtime)
+        }
+
+    def get_class_label_map():
+        class_file = GROUND_TRUTH_DIR / "class" / "classes.txt"
+        class_map = {}
+        if class_file.exists():
+            try:
+                with open(class_file, "r") as f:
+                    for idx, line in enumerate(f):
+                        label = line.strip()
+                        if label:
+                            class_map[idx] = label
+            except Exception:
+                pass
+        return class_map
+
+    def metric_safe_label(label):
+        return str(label).strip().lower().replace(" ", "_").replace("-", "_")
+    
+    def parse_yolo_annotation(txt_path):
+        """Parse YOLO format annotation (class_id x_center y_center width height)"""
+        boxes = []
+        if not txt_path.exists():
+            return boxes
+        try:
+            with open(txt_path) as f:
+                for line in f:
+                    if line.strip():
+                        parts = [float(x) for x in line.strip().split()]
+                        if len(parts) >= 5:
+                            boxes.append((
+                                int(parts[0]),
+                                parts[1],
+                                parts[2],
+                                parts[3],
+                                parts[4]
+                            ))
+        except:
+            pass
+        return boxes
+    
+    def compare_annotations(gt_txt, pred_txt, img_shape):
+        """Compare ground truth and prediction annotations using IoU"""
+        gt_boxes = parse_yolo_annotation(gt_txt)
+        pred_boxes = parse_yolo_annotation(pred_txt)
+        
+        # Convert normalized coordinates to pixel coordinates
+        w, h = img_shape
+        gt_pixel_boxes = []
+        for box in gt_boxes:
+            class_id, x_c, y_c, bw, bh = box
+            x1 = max(0, (x_c - bw/2) * w)
+            y1 = max(0, (y_c - bh/2) * h)
+            x2 = min(w, (x_c + bw/2) * w)
+            y2 = min(h, (y_c + bh/2) * h)
+            gt_pixel_boxes.append((class_id, x1, y1, x2, y2))
+        
+        pred_pixel_boxes = []
+        for box in pred_boxes:
+            class_id, x_c, y_c, bw, bh = box
+            x1 = max(0, (x_c - bw/2) * w)
+            y1 = max(0, (y_c - bh/2) * h)
+            x2 = min(w, (x_c + bw/2) * w)
+            y2 = min(h, (y_c + bh/2) * h)
+            pred_pixel_boxes.append((class_id, x1, y1, x2, y2))
+        
+        # Calculate IoU
+        def calculate_iou(box1, box2):
+            _, x1_1, y1_1, x2_1, y2_1 = box1
+            _, x1_2, y1_2, x2_2, y2_2 = box2
+            
+            # Intersection
+            xi1 = max(x1_1, x1_2)
+            yi1 = max(y1_1, y1_2)
+            xi2 = min(x2_1, x2_2)
+            yi2 = min(y2_1, y2_2)
+            
+            inter_area = max(0, xi2 - xi1) * max(0, yi2 - yi1)
+            
+            # Union
+            box1_area = (x2_1 - x1_1) * (y2_1 - y1_1)
+            box2_area = (x2_2 - x1_2) * (y2_2 - y1_2)
+            union_area = box1_area + box2_area - inter_area
+            
+            return inter_area / union_area if union_area > 0 else 0
+        
+        # Match boxes with IoU threshold 0.5
+        iou_threshold = 0.5
+        matched_pairs = []
+        used_pred = set()
+        
+        for gt_box in gt_pixel_boxes:
+            best_iou = 0
+            best_pred_idx = -1
+            
+            for pred_idx, pred_box in enumerate(pred_pixel_boxes):
+                if pred_idx in used_pred:
+                    continue
+                
+                # Only match boxes of same class
+                if gt_box[0] != pred_box[0]:
+                    continue
+                
+                iou = calculate_iou(gt_box, pred_box)
+                if iou > best_iou and iou >= iou_threshold:
+                    best_iou = iou
+                    best_pred_idx = pred_idx
+            
+            if best_pred_idx >= 0:
+                matched_pairs.append((gt_box, pred_pixel_boxes[best_pred_idx]))
+                used_pred.add(best_pred_idx)
+        
+        per_class = {}
+        for cls, *_ in gt_pixel_boxes:
+            per_class.setdefault(cls, {'tp': 0, 'fp': 0, 'fn': 0})
+        for cls, *_ in pred_pixel_boxes:
+            per_class.setdefault(cls, {'tp': 0, 'fp': 0, 'fn': 0})
+
+        matched_pred_indices = set()
+        matched_gt_indices = set()
+        for gt_box, pred_box in matched_pairs:
+            gt_idx = gt_pixel_boxes.index(gt_box)
+            pred_idx = pred_pixel_boxes.index(pred_box)
+            matched_gt_indices.add(gt_idx)
+            matched_pred_indices.add(pred_idx)
+            cls_id = gt_box[0]
+            per_class.setdefault(cls_id, {'tp': 0, 'fp': 0, 'fn': 0})
+            per_class[cls_id]['tp'] += 1
+
+        for pred_idx, pred_box in enumerate(pred_pixel_boxes):
+            if pred_idx not in matched_pred_indices:
+                cls_id = pred_box[0]
+                per_class.setdefault(cls_id, {'tp': 0, 'fp': 0, 'fn': 0})
+                per_class[cls_id]['fp'] += 1
+
+        for gt_idx, gt_box in enumerate(gt_pixel_boxes):
+            if gt_idx not in matched_gt_indices:
+                cls_id = gt_box[0]
+                per_class.setdefault(cls_id, {'tp': 0, 'fp': 0, 'fn': 0})
+                per_class[cls_id]['fn'] += 1
+
+        metrics = {
+            'gt_count': len(gt_boxes),
+            'pred_count': len(pred_boxes),
+            'matches': len(matched_pairs),
+            'false_positives': len(pred_boxes) - len(matched_pairs),
+            'false_negatives': len(gt_boxes) - len(matched_pairs),
+            'per_class': per_class
+        }
+        return metrics
+    
+    def run_model_comparison(model_name):
+        """Compare model predictions with ground truth"""
+        from ultralytics import YOLO
+        
+        results = {
+            'model': model_name,
+            'precision': 0.0,
+            'recall': 0.0,
+            'f1_score': 0.0,
+            'total_frames': 0,
+            'matched_boxes': 0,
+            'false_positives': 0,
+            'false_negatives': 0,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        # Get model path
+        if model_name == "Latest (new_model)":
+            latest_models = sorted(NEW_MODEL_DIR.glob("*.pt"), key=lambda p: p.stat().st_mtime)
+            if not latest_models:
+                return results
+            model_path = latest_models[-1]
+            output_model_name = "new_model"
+        else:
+            model_path = MODELS_DIR / f"{model_name}.pt"
+            output_model_name = model_name
+        
+        if not model_path.exists():
+            return results
+        
+        # Load model
+        try:
+            model = YOLO(str(model_path))
+        except Exception as e:
+            st.error(f"Failed to load model: {e}")
+            return results
+        
+        # Get ground truth images
+        gt_imgs = sorted(list(GROUND_TRUTH_DIR.glob("*.jpg")) + list(GROUND_TRUTH_DIR.glob("*.png")))
+        
+        # Create output directory for predictions
+        pred_output_dir = COMPARE_OUTPUT_DIR / output_model_name
+        pred_output_dir.mkdir(parents=True, exist_ok=True)
+        
+        total_matches = 0
+        total_fp = 0
+        total_fn = 0
+        class_label_map = get_class_label_map()
+        per_class_totals = {}
+        frame_errors = 0
+        
+        for gt_img in gt_imgs:
+            gt_txt = gt_img.with_suffix(".txt")
+            
+            if not gt_txt.exists():
+                continue
+            
+            # Run inference on image
+            try:
+                results_yolo = model(str(gt_img), conf=0.5, verbose=False)
+                
+                # Save predictions to txt file
+                pred_txt = pred_output_dir / f"{gt_img.stem}.txt"
+                pred_txt.parent.mkdir(parents=True, exist_ok=True)
+                
+                # Extract predictions from YOLO results
+                predictions = []
+                if len(results_yolo) > 0 and results_yolo[0].boxes is not None:
+                    boxes = results_yolo[0].boxes
+                    h, w = results_yolo[0].orig_shape
+                    
+                    for box in boxes:
+                        # Convert to YOLO format (normalized center coordinates)
+                        x_center = (box.xywh[0][0] / w).item()
+                        y_center = (box.xywh[0][1] / h).item()
+                        box_width = (box.xywh[0][2] / w).item()
+                        box_height = (box.xywh[0][3] / h).item()
+                        class_id = int(box.cls[0].item())
+                        predictions.append(f"{class_id} {x_center:.6f} {y_center:.6f} {box_width:.6f} {box_height:.6f}\n")
+                
+                # Write predictions
+                with open(pred_txt, 'w') as f:
+                    f.writelines(predictions)
+                
+                # Compare annotations
+                h, w = results_yolo[0].orig_shape if len(results_yolo) > 0 else (0, 0)
+                metrics = compare_annotations(gt_txt, pred_txt, (w, h))
+                total_matches += metrics['matches']
+                total_fp += metrics['false_positives']
+                total_fn += metrics['false_negatives']
+                results['total_frames'] += 1
+
+                for class_id, class_stats in metrics.get('per_class', {}).items():
+                    per_class_totals.setdefault(class_id, {'tp': 0, 'fp': 0, 'fn': 0})
+                    per_class_totals[class_id]['tp'] += class_stats.get('tp', 0)
+                    per_class_totals[class_id]['fp'] += class_stats.get('fp', 0)
+                    per_class_totals[class_id]['fn'] += class_stats.get('fn', 0)
+
+                preview_img = cv2.imread(str(gt_img))
+                if preview_img is not None:
+                    gt_boxes = parse_yolo_annotation(gt_txt)
+                    for class_id, x_c, y_c, bw, bh in gt_boxes:
+                        x1 = int(max(0, (x_c - bw / 2) * w))
+                        y1 = int(max(0, (y_c - bh / 2) * h))
+                        x2 = int(min(w, (x_c + bw / 2) * w))
+                        y2 = int(min(h, (y_c + bh / 2) * h))
+                        label = class_label_map.get(class_id, f"class_{class_id}")
+                        cv2.rectangle(preview_img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                        cv2.putText(preview_img, f"GT:{label}", (x1, max(20, y1 - 6)), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 255, 0), 1)
+
+                    if len(results_yolo) > 0 and results_yolo[0].boxes is not None:
+                        for box in results_yolo[0].boxes:
+                            x1, y1, x2, y2 = box.xyxy[0].tolist()
+                            class_id = int(box.cls[0].item())
+                            conf = float(box.conf[0].item())
+                            label = class_label_map.get(class_id, f"class_{class_id}")
+                            cv2.rectangle(preview_img, (int(x1), int(y1)), (int(x2), int(y2)), (32, 64, 255), 2)
+                            cv2.putText(preview_img, f"P:{label} {conf:.2f}", (int(x1), min(h - 8, int(y2) + 14)), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (32, 64, 255), 1)
+
+                    cv2.imwrite(str(pred_output_dir / gt_img.name), preview_img)
+                
+            except Exception as e:
+                frame_errors += 1
+                continue
+        
+        # Calculate metrics
+        results['matched_boxes'] = total_matches
+        results['false_positives'] = total_fp
+        results['false_negatives'] = total_fn
+        results['frame_errors'] = frame_errors
+        
+        if total_matches + total_fp > 0:
+            results['precision'] = total_matches / (total_matches + total_fp)
+        if total_matches + total_fn > 0:
+            results['recall'] = total_matches / (total_matches + total_fn)
+        if results['precision'] + results['recall'] > 0:
+            results['f1_score'] = 2 * (results['precision'] * results['recall']) / (results['precision'] + results['recall'])
+
+        for class_id, stats in per_class_totals.items():
+            tp = stats.get('tp', 0)
+            fp = stats.get('fp', 0)
+            fn = stats.get('fn', 0)
+            class_precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+            class_recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+            class_name = metric_safe_label(class_label_map.get(class_id, f"class_{class_id}"))
+            results[f'precision_{class_name}'] = class_precision
+            results[f'recall_{class_name}'] = class_recall
+        
+        return results
+    
+    def save_metrics_to_csv(metrics_dict):
+        """Append metrics to CSV file"""
+        df_new = pd.DataFrame([metrics_dict])
+        if METRICS_CSV.exists():
+            df_existing = pd.read_csv(METRICS_CSV)
+            df_combined = pd.concat([df_existing, df_new], ignore_index=True)
+        else:
+            df_combined = df_new
+        df_combined.to_csv(METRICS_CSV, index=False)
+
+    def resolve_metric_columns(df):
+        model_col = 'model_name' if 'model_name' in df.columns else 'model'
+        date_col = 'date' if 'date' in df.columns else 'timestamp'
+        prec_col = 'overall_precision' if 'overall_precision' in df.columns else 'precision'
+        rec_col = 'overall_recall' if 'overall_recall' in df.columns else 'recall'
+        return model_col, date_col, prec_col, rec_col
+
+    def build_per_class_table(metrics_row):
+        class_rows = []
+        for col in metrics_row.index:
+            if not col.startswith('precision_'):
+                continue
+            cls = col.replace('precision_', '')
+            rec_col = f"recall_{cls}"
+            if rec_col not in metrics_row.index:
+                continue
+
+            precision_val = metrics_row.get(col, np.nan)
+            recall_val = metrics_row.get(rec_col, np.nan)
+
+            if pd.isna(precision_val) and pd.isna(recall_val):
+                continue
+
+            precision_num = float(precision_val) if pd.notna(precision_val) else 0.0
+            recall_num = float(recall_val) if pd.notna(recall_val) else 0.0
+            f1_num = (2 * precision_num * recall_num / (precision_num + recall_num)) if (precision_num + recall_num) > 0 else 0.0
+
+            class_rows.append({
+                'Class': cls.replace('_', ' ').title(),
+                'Precision': precision_num,
+                'Recall': recall_num,
+                'F1': f1_num
+            })
+
+        if not class_rows:
+            return pd.DataFrame()
+
+        return pd.DataFrame(class_rows).sort_values('F1', ascending=False).reset_index(drop=True)
+    
+    # Get available models
+    available_models = get_available_models()
+    latest_new_model = get_latest_new_model_info()
+    
+    if not available_models:
+        st.warning("No models found in models folder")
+
     st.markdown("""
-    <div class="panel-blue">
-        <h2>Annotation Analytics</h2>
-        <p>Monitor annotation progress and model performance metrics.</p>
+    <div class="section-card" style="margin-top: 0.5rem; padding: 1.25rem 1.5rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+            <div>
+                <h3 style="margin: 0; color: #f8fafc; font-size: 1.1rem; font-weight: 700;">Run Model Evaluation</h3>
+                <p style="margin: 0.35rem 0 0; color: #cbd5e1; font-size: 0.92rem;">Evaluates the selected model on ground truth and appends metrics to the CSV.</p>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if available_models:
+        col_eval_1, col_eval_2 = st.columns([2, 1])
+        with col_eval_1:
+            selected_model = st.selectbox("Model to evaluate", available_models, key="model_eval_select")
+        with col_eval_2:
+            if st.button("Run Evaluation", type="primary", use_container_width=True):
+                if selected_model:
+                    with st.spinner(f"Comparing {selected_model} with ground truth..."):
+                        results = run_model_comparison(selected_model)
+                        total_activity = results['matched_boxes'] + results['false_positives'] + results['false_negatives']
+                        if results.get('total_frames', 0) == 0:
+                            st.error("No frames were processed. Metrics entry was not saved.")
+                        elif total_activity == 0:
+                            st.warning("Evaluation found no GT/prediction boxes. Metrics entry was not saved.")
+                        else:
+                            save_metrics_to_csv(results)
+                            st.success(f"✓ Comparison completed!\nPrecision: {results['precision']:.2%} | Recall: {results['recall']:.2%} | F1: {results['f1_score']:.2%}")
+                else:
+                    st.error("Please select a model first")
+
+    st.divider()
+    
+    # Load metrics once for this page
+    metrics_df = pd.read_csv(METRICS_CSV) if METRICS_CSV.exists() else None
+
+    # Display selected model with preview frames and metrics
+    if available_models:
+        st.markdown("### Model Insights")
+
+        view_model = st.selectbox(
+            "Choose version to inspect",
+            available_models,
+            index=0,
+            key="model_compare_view_select",
+            format_func=lambda name: f"Latest (new_model) • {latest_new_model['name']}" if (name == "Latest (new_model)" and latest_new_model) else name
+        )
+
+        latest_by_model = {}
+        if metrics_df is not None and len(metrics_df) > 0:
+            model_col, date_col, prec_col, rec_col = resolve_metric_columns(metrics_df)
+            metrics_df_sorted = metrics_df.copy()
+            metrics_df_sorted[date_col] = pd.to_datetime(metrics_df_sorted[date_col], errors='coerce')
+            latest_rows = metrics_df_sorted.sort_values(date_col).groupby(model_col, as_index=False).tail(1)
+            for _, row in latest_rows.iterrows():
+                latest_by_model[row[model_col]] = row
+
+        with st.container(border=True):
+            col_title, col_metrics = st.columns([1, 3])
+
+            with col_title:
+                if view_model == "Latest (new_model)":
+                    label = "Latest (new_model)"
+                    if latest_new_model:
+                        st.markdown(f"**{label}**")
+                        st.caption(f"Active file: {latest_new_model['name']}.pt")
+                        st.caption(f"Updated: {latest_new_model['updated'].strftime('%Y-%m-%d %H:%M:%S')}")
+                    else:
+                        st.markdown(f"**{label}**")
+                        st.caption("No model file found in new_model folder.")
+                else:
+                    st.markdown(f"**{view_model}**")
+
+                if view_model in latest_by_model:
+                    latest = latest_by_model[view_model]
+                    overall_precision = float(latest.get(prec_col, 0.0))
+                    overall_recall = float(latest.get(rec_col, 0.0))
+                    overall_f1 = (2 * overall_precision * overall_recall / (overall_precision + overall_recall)) if (overall_precision + overall_recall) > 0 else 0.0
+
+                    st.metric("Overall Precision", f"{overall_precision:.2%}")
+                    st.metric("Overall Recall", f"{overall_recall:.2%}")
+                    st.metric("Overall F1", f"{overall_f1:.2%}")
+                else:
+                    st.info("No metrics run yet")
+
+            with col_metrics:
+                metric_tab, frames_tab = st.tabs(["Per-Class Metrics", "Comparison Frames"])
+
+                with metric_tab:
+                    if view_model in latest_by_model:
+                        per_class_df = build_per_class_table(latest_by_model[view_model])
+                        if not per_class_df.empty:
+                            chart_df = per_class_df.set_index('Class')[['Precision', 'Recall', 'F1']]
+                            st.bar_chart(chart_df)
+                            st.dataframe(
+                                per_class_df,
+                                use_container_width=True,
+                                hide_index=True,
+                                height=min(420, 70 + (len(per_class_df) * 36)),
+                                column_config={
+                                    "Class": st.column_config.TextColumn("Class", width="medium"),
+                                    "Precision": st.column_config.ProgressColumn("Precision", format="%.1f%%", min_value=0.0, max_value=1.0),
+                                    "Recall": st.column_config.ProgressColumn("Recall", format="%.1f%%", min_value=0.0, max_value=1.0),
+                                    "F1": st.column_config.ProgressColumn("F1", format="%.1f%%", min_value=0.0, max_value=1.0),
+                                }
+                            )
+                        else:
+                            st.info("No per-class metrics available for this model.")
+                    else:
+                        st.info("Run comparison to generate per-class metrics.")
+
+                with frames_tab:
+                    st.markdown("**Comparison Frames Preview**")
+                    frames = get_model_output_frames(view_model)
+
+                    if frames:
+                        cols = st.columns(3)
+                        for idx, frame_path in enumerate(frames):
+                            with cols[idx % 3]:
+                                try:
+                                    img = cv2.imread(str(frame_path))
+                                    if img is not None:
+                                        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                                        st.image(img_rgb, caption=frame_path.name, use_container_width=True)
+                                except:
+                                    st.write(f"Could not load {frame_path.name}")
+                        st.caption("Showing up to 6 recent output frames.")
+                    else:
+                        st.info("No comparison frames yet. Run evaluation to generate.")
+    
+    st.divider()
+    
+    # Display metrics history
+    if metrics_df is not None and len(metrics_df) > 0:
+        st.markdown("### Metrics History")
+        model_col, date_col, prec_col, rec_col = resolve_metric_columns(metrics_df)
+        metrics_df_work = metrics_df.copy()
+        metrics_df_work[date_col] = pd.to_datetime(metrics_df_work[date_col], errors='coerce')
+        metrics_df_work = metrics_df_work.sort_values(date_col, ascending=False)
+
+        filter_models = sorted(metrics_df_work[model_col].dropna().unique().tolist())
+        selected_models = st.multiselect(
+            "Filter models",
+            options=filter_models,
+            default=filter_models,
+            key="history_model_filter"
+        )
+
+        if selected_models:
+            metrics_df_work = metrics_df_work[metrics_df_work[model_col].isin(selected_models)]
+        else:
+            st.info("Select at least one model to view history.")
+            metrics_df_work = metrics_df_work.iloc[0:0]
+        
+        if len(metrics_df_work) > 0:
+            trend_df = metrics_df_work[[date_col, model_col, prec_col, rec_col]].copy()
+            trend_df = trend_df.dropna(subset=[date_col]).sort_values(date_col)
+            if len(trend_df) > 0:
+                st.markdown("#### Precision / Recall Trend")
+                trend_metric = st.segmented_control(
+                    "Trend metric",
+                    ["Precision", "Recall"],
+                    key="history_trend_metric",
+                    default="Precision"
+                )
+                value_col = prec_col if trend_metric == "Precision" else rec_col
+                pivot_data = trend_df.pivot_table(values=value_col, index=date_col, columns=model_col)
+                st.line_chart(pivot_data)
+
+            st.markdown("#### Detailed Runs")
+            st.dataframe(
+                metrics_df_work,
+                use_container_width=True,
+                hide_index=True,
+                height=360,
+                column_config={
+                    model_col: st.column_config.TextColumn("Model", width="small"),
+                    date_col: st.column_config.DatetimeColumn("Run Time", format="YYYY-MM-DD HH:mm:ss"),
+                    prec_col: st.column_config.ProgressColumn("Overall Precision", format="%.1f%%", min_value=0.0, max_value=1.0),
+                    rec_col: st.column_config.ProgressColumn("Overall Recall", format="%.1f%%", min_value=0.0, max_value=1.0),
+                }
+            )
+
+        csv_data = metrics_df.to_csv(index=False)
+        st.download_button("Download Metrics CSV", csv_data, "metrics.csv", "text/csv")
+
+# ANALYSIS PAGE
+elif current_page == "Analysis":
+    st.markdown("""
+    <div class="hero-header">
+        <h1 class="hero-title">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:8px;">
+                <path d="M3 3v18h18"></path>
+                <path d="M7 14l3-3 3 2 4-5"></path>
+                <circle cx="10" cy="11" r="1"></circle>
+                <circle cx="13" cy="13" r="1"></circle>
+                <circle cx="17" cy="8" r="1"></circle>
+            </svg>
+            Analysis
+        </h1>
+        <p class="hero-subtitle">Track model quality trends, per-class behavior, and comparative performance over time</p>
+        <div class="hero-badges">
+            <span class="hero-badge">KPI Snapshot</span>
+            <span class="hero-badge">Class-Wise Insights</span>
+            <span class="hero-badge">Trend Tracking</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Total Frames", "0")
-    with col2:
-        st.metric("Annotated", "0%")
-    with col3:
-        st.metric("Classes", "0")
+    # Get available models and metrics
+    COMPARE_BASE_DIR = Path(__file__).resolve().parent / "Model_Compare"
+    MODELS_DIR = COMPARE_BASE_DIR / "model"
+    METRICS_CSV = COMPARE_BASE_DIR / "metrics.csv"
     
-    st.info("Coming soon: Detailed analytics dashboard with charts and statistics")
+    # Get models
+    models = []
+    if MODELS_DIR.exists():
+        pt_files = sorted(MODELS_DIR.glob("*.pt"))
+        for pt_file in pt_files:
+            models.append(pt_file.stem)
+    
+    # Load metrics if available
+    metrics_df = None
+    if METRICS_CSV.exists():
+        metrics_df = pd.read_csv(METRICS_CSV)
+    
+    # Tabs for different visualizations
+    tab1, tab2, tab3, tab4 = st.tabs(["Model Performance", "Per-Class Metrics", "Metrics History", "Model Comparison"])
+    
+    with tab1:
+        st.markdown("""
+        <div style="display:flex;align-items:center;gap:0.55rem;margin-bottom:0.5rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><path d="M3 3v18h18"></path><path d="M7 14l3-3 3 2 4-5"></path></svg>
+            <h3 style="margin:0;color:#e2e8f0;">Latest Model Metrics</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        if metrics_df is not None and len(metrics_df) > 0:
+            model_col = 'model_name' if 'model_name' in metrics_df.columns else 'model'
+            date_col = 'date' if 'date' in metrics_df.columns else 'timestamp'
+            prec_col = 'overall_precision' if 'overall_precision' in metrics_df.columns else 'precision'
+            rec_col = 'overall_recall' if 'overall_recall' in metrics_df.columns else 'recall'
+
+            latest_metrics = metrics_df.copy()
+            latest_metrics[date_col] = pd.to_datetime(latest_metrics[date_col], errors='coerce')
+            latest_metrics = latest_metrics.sort_values(date_col).groupby(model_col, as_index=False).tail(1)
+
+            if len(latest_metrics) > 0:
+                latest_metrics = latest_metrics.copy()
+                latest_metrics['F1-Score'] = latest_metrics.apply(
+                    lambda x: x.get('f1_score', 2 * (x.get(prec_col, 0) * x.get(rec_col, 0)) / (x.get(prec_col, 0) + x.get(rec_col, 0)) if (x.get(prec_col, 0) + x.get(rec_col, 0)) > 0 else 0),
+                    axis=1
+                )
+
+                kpi_df = latest_metrics[[model_col, prec_col, rec_col, 'F1-Score']].copy()
+                kpi_df.rename(columns={model_col: 'Model', prec_col: 'Precision', rec_col: 'Recall'}, inplace=True)
+                kpi_df = kpi_df.sort_values('F1-Score', ascending=False)
+
+                c1, c2, c3 = st.columns(3)
+                with c1:
+                    st.metric("Best F1 Model", str(kpi_df.iloc[0]['Model']))
+                with c2:
+                    st.metric("Top F1", f"{float(kpi_df.iloc[0]['F1-Score']):.2%}")
+                with c3:
+                    st.metric("Models Tracked", f"{kpi_df['Model'].nunique()}")
+
+                st.markdown("### Overall Metrics Comparison")
+                st.bar_chart(kpi_df.set_index('Model')[['Precision', 'Recall', 'F1-Score']])
+
+                st.markdown("### Latest Snapshot")
+                st.dataframe(
+                    kpi_df,
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "Model": st.column_config.TextColumn("Model", width="small"),
+                        "Precision": st.column_config.ProgressColumn("Precision", format="%.1f%%", min_value=0.0, max_value=1.0),
+                        "Recall": st.column_config.ProgressColumn("Recall", format="%.1f%%", min_value=0.0, max_value=1.0),
+                        "F1-Score": st.column_config.ProgressColumn("F1", format="%.1f%%", min_value=0.0, max_value=1.0),
+                    }
+                )
+            else:
+                st.info("No metrics available yet. Run model comparison to generate metrics.")
+        else:
+            st.info("No metrics available. Run model comparison on the Comparison page.")
+    
+    with tab2:
+        st.markdown("""
+        <div style="display:flex;align-items:center;gap:0.55rem;margin-bottom:0.5rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M3 3h18v18H3z"></path><path d="M3 9h18"></path><path d="M9 9v12"></path></svg>
+            <h3 style="margin:0;color:#e2e8f0;">Per-Class Performance Analysis</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        if metrics_df is not None and len(metrics_df) > 0:
+            model_col = 'model_name' if 'model_name' in metrics_df.columns else 'model'
+            date_col = 'date' if 'date' in metrics_df.columns else 'timestamp'
+            per_class_cols = [col for col in metrics_df.columns if col.startswith('precision_') or col.startswith('recall_')]
+
+            if per_class_cols:
+                work_df = metrics_df.copy()
+                work_df[date_col] = pd.to_datetime(work_df[date_col], errors='coerce')
+
+                available_models = sorted(work_df[model_col].dropna().unique().tolist())
+                selected_model = st.selectbox("Select Model", available_models, key="per_class_model_select")
+
+                if selected_model:
+                    model_latest = work_df[work_df[model_col] == selected_model].sort_values(date_col).tail(1)
+                    if len(model_latest) > 0:
+                        row = model_latest.iloc[0]
+                        class_metrics = []
+
+                        classes = set()
+                        for col in per_class_cols:
+                            if col.startswith('precision_'):
+                                classes.add(col.replace('precision_', ''))
+                            elif col.startswith('recall_'):
+                                classes.add(col.replace('recall_', ''))
+
+                        for cls in sorted(classes):
+                            p_col = f'precision_{cls}'
+                            r_col = f'recall_{cls}'
+                            if p_col not in row.index or r_col not in row.index:
+                                continue
+                            p_val = float(row.get(p_col, 0)) if pd.notna(row.get(p_col, np.nan)) else 0.0
+                            r_val = float(row.get(r_col, 0)) if pd.notna(row.get(r_col, np.nan)) else 0.0
+                            f_val = (2 * p_val * r_val / (p_val + r_val)) if (p_val + r_val) > 0 else 0.0
+                            class_metrics.append({
+                                'Class': cls.replace('_', ' ').title(),
+                                'Precision': p_val,
+                                'Recall': r_val,
+                                'F1': f_val
+                            })
+
+                        if class_metrics:
+                            class_df = pd.DataFrame(class_metrics).sort_values('F1', ascending=False)
+                            st.markdown(f"### {selected_model} - Per-Class Matrix")
+                            st.bar_chart(class_df.set_index('Class')[['Precision', 'Recall', 'F1']])
+                            st.dataframe(
+                                class_df,
+                                use_container_width=True,
+                                hide_index=True,
+                                height=min(500, 72 + (len(class_df) * 36)),
+                                column_config={
+                                    "Class": st.column_config.TextColumn("Class", width="medium"),
+                                    "Precision": st.column_config.ProgressColumn("Precision", format="%.1f%%", min_value=0.0, max_value=1.0),
+                                    "Recall": st.column_config.ProgressColumn("Recall", format="%.1f%%", min_value=0.0, max_value=1.0),
+                                    "F1": st.column_config.ProgressColumn("F1", format="%.1f%%", min_value=0.0, max_value=1.0),
+                                }
+                            )
+                        else:
+                            st.info("No per-class metrics available for this model.")
+            else:
+                st.info("No per-class metrics found in the data. Run model comparison to generate per-class metrics.")
+        else:
+            st.info("No metrics available yet.")
+    
+    with tab3:
+        st.markdown("""
+        <div style="display:flex;align-items:center;gap:0.55rem;margin-bottom:0.5rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>
+            <h3 style="margin:0;color:#e2e8f0;">Metrics History Over Time</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        if metrics_df is not None and len(metrics_df) > 0:
+            model_col = 'model_name' if 'model_name' in metrics_df.columns else 'model'
+            date_col = 'date' if 'date' in metrics_df.columns else 'timestamp'
+            prec_col = 'overall_precision' if 'overall_precision' in metrics_df.columns else 'precision'
+            rec_col = 'overall_recall' if 'overall_recall' in metrics_df.columns else 'recall'
+
+            history_df = metrics_df.copy()
+            history_df[date_col] = pd.to_datetime(history_df[date_col], errors='coerce')
+            history_df = history_df.dropna(subset=[date_col]).sort_values(date_col)
+
+            model_opts = sorted(history_df[model_col].dropna().unique().tolist())
+            selected_history_models = st.multiselect(
+                "Models",
+                options=model_opts,
+                default=model_opts,
+                key="analytics_history_models"
+            )
+
+            if selected_history_models:
+                history_df = history_df[history_df[model_col].isin(selected_history_models)]
+
+            metric_choice = st.segmented_control(
+                "Metric",
+                ["Precision", "Recall"],
+                key="analytics_history_metric",
+                default="Precision"
+            )
+
+            metric_col = prec_col if metric_choice == "Precision" else rec_col
+            chart_df = history_df.pivot_table(values=metric_col, index=date_col, columns=model_col)
+            if len(chart_df) > 0:
+                st.line_chart(chart_df)
+                st.area_chart(chart_df)
+
+            st.write("**Detailed Metrics Table**")
+            st.dataframe(
+                history_df.sort_values(date_col, ascending=False),
+                use_container_width=True,
+                hide_index=True,
+                height=360,
+                column_config={
+                    model_col: st.column_config.TextColumn("Model", width="small"),
+                    date_col: st.column_config.DatetimeColumn("Run Time", format="YYYY-MM-DD HH:mm:ss"),
+                    prec_col: st.column_config.ProgressColumn("Overall Precision", format="%.1f%%", min_value=0.0, max_value=1.0),
+                    rec_col: st.column_config.ProgressColumn("Overall Recall", format="%.1f%%", min_value=0.0, max_value=1.0),
+                }
+            )
+        else:
+            st.info("No metrics history available yet.")
+    
+    with tab4:
+        st.markdown("""
+        <div style="display:flex;align-items:center;gap:0.55rem;margin-bottom:0.5rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><path d="M4 19V5"></path><path d="M10 19V9"></path><path d="M16 19V7"></path><path d="M22 19V11"></path></svg>
+            <h3 style="margin:0;color:#e2e8f0;">Model Comparison Dashboard</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        if metrics_df is not None and len(metrics_df) > 0:
+            model_col = 'model_name' if 'model_name' in metrics_df.columns else 'model'
+            date_col = 'date' if 'date' in metrics_df.columns else 'timestamp'
+            prec_col = 'overall_precision' if 'overall_precision' in metrics_df.columns else 'precision'
+            rec_col = 'overall_recall' if 'overall_recall' in metrics_df.columns else 'recall'
+
+            latest_metrics = metrics_df.copy()
+            latest_metrics[date_col] = pd.to_datetime(latest_metrics[date_col], errors='coerce')
+            latest_metrics = latest_metrics.sort_values(date_col).groupby(model_col, as_index=False).tail(1)
+
+            if len(latest_metrics) > 0:
+                latest_metrics = latest_metrics.copy()
+                latest_metrics['F1-Score'] = latest_metrics.apply(
+                    lambda x: x.get('f1_score', 2 * (x.get(prec_col, 0) * x.get(rec_col, 0)) / (x.get(prec_col, 0) + x.get(rec_col, 0)) if (x.get(prec_col, 0) + x.get(rec_col, 0)) > 0 else 0),
+                    axis=1
+                )
+
+                st.markdown("### Overall Model Comparison")
+                overview = latest_metrics[[model_col, prec_col, rec_col, 'F1-Score']].set_index(model_col)
+                overview.columns = ['Precision', 'Recall', 'F1-Score']
+                st.bar_chart(overview)
+
+                per_class_cols = [col for col in latest_metrics.columns if col.startswith('precision_') or col.startswith('recall_')]
+                if per_class_cols:
+                    st.markdown("### Per-Class Comparison")
+                    classes = set()
+                    for col in per_class_cols:
+                        if col.startswith('precision_'):
+                            classes.add(col.replace('precision_', ''))
+                        elif col.startswith('recall_'):
+                            classes.add(col.replace('recall_', ''))
+
+                    classes = sorted(classes)
+                    if classes:
+                        selected_class = st.selectbox("Select Class", classes, key="class_comparison_select")
+                        metric_type = st.segmented_control(
+                            "Compare",
+                            ["Precision", "Recall"],
+                            key="class_comp_metric",
+                            default="Precision"
+                        )
+
+                        selected_col = f"precision_{selected_class}" if metric_type == "Precision" else f"recall_{selected_class}"
+                        if selected_col in latest_metrics.columns:
+                            class_comp_df = latest_metrics[[model_col, selected_col]].copy()
+                            class_comp_df.rename(columns={selected_col: metric_type, model_col: 'Model'}, inplace=True)
+                            st.bar_chart(class_comp_df.set_index('Model'))
+                            st.dataframe(
+                                class_comp_df,
+                                use_container_width=True,
+                                hide_index=True,
+                                column_config={
+                                    "Model": st.column_config.TextColumn("Model", width="small"),
+                                    metric_type: st.column_config.ProgressColumn(metric_type, format="%.1f%%", min_value=0.0, max_value=1.0)
+                                }
+                            )
+
+                st.markdown("### Detailed Comparison Table")
+                display_cols = [model_col, prec_col, rec_col, 'F1-Score']
+                for col in ['matched_boxes', 'false_positives', 'false_negatives', 'total_frames']:
+                    if col in latest_metrics.columns:
+                        display_cols.append(col)
+
+                comparison_table = latest_metrics[display_cols].copy()
+                comparison_table.rename(columns={
+                    model_col: 'Model',
+                    prec_col: 'Overall Precision',
+                    rec_col: 'Overall Recall'
+                }, inplace=True)
+
+                st.dataframe(
+                    comparison_table.sort_values('F1-Score', ascending=False),
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "Model": st.column_config.TextColumn("Model", width="small"),
+                        "Overall Precision": st.column_config.ProgressColumn("Overall Precision", format="%.1f%%", min_value=0.0, max_value=1.0),
+                        "Overall Recall": st.column_config.ProgressColumn("Overall Recall", format="%.1f%%", min_value=0.0, max_value=1.0),
+                        "F1-Score": st.column_config.ProgressColumn("F1", format="%.1f%%", min_value=0.0, max_value=1.0),
+                    }
+                )
+            else:
+                st.info("No models compared yet.")
+        else:
+            st.info("No metrics available. Run model comparison first.")
+
+
+
 
 # Footer
 st.markdown("---")
