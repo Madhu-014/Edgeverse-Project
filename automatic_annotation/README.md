@@ -1,198 +1,211 @@
 # Percieva™ Auto-Annotation Studio
 
-A state-of-the-art web application for automated video annotation using YOLO-powered AI detection. Built with Streamlit, this modern tool streamlines the entire annotation workflow from video processing to dataset creation with an intuitive interface and professional design.
-
-## ✨ Features
-
-### 🖥️ **Modern Web Interface**
-- Professional, responsive Streamlit UI with state-of-the-art design
-- Real-time image preview and annotation visualization
-- Interactive sidebar navigation with page indicators
-- Settings panel for directory configuration
-
-### 🎬 **Video & Image Processing**
-- Extract frames from videos at custom intervals
-- Support for multiple formats (MP4, AVI, MOV, etc.)
-- Automatic video segmentation for large files (200MB chunks)
-- Direct image upload with ZIP support
-
-### 🔄 **Data Augmentation**
-- 6+ intelligent augmentation techniques:
-  - Gaussian noise injection
-  - Gaussian blur
-  - Motion blur
-  - Brightness/Contrast adjustment
-  - Small rotation
-  - Light fog effect
-- Configurable variants per image (0-6)
-- Automatic output to augmented folder
-
-### 🤖 **AI Auto-Annotation**
-- YOLO-powered automatic object detection
-- Custom class management
-- Batch processing of frames
-- YOLO format annotation output
-- Visual annotation preview
-
-### 📊 **Image Gallery & Preview**
-- Image Gallery: Browse dataset before annotation
-- Annotated Gallery: Review annotated images with bounding boxes
-- Adjustable grid layout (2-5 columns)
-- Customizable image display count
+Percieva™ Auto-Annotation Studio is a Streamlit-based workflow for:
+- ingesting videos/images,
+- filtering hard frames using model-vs-YOLO comparison,
+- augmenting data,
+- auto-annotating with YOLO,
+- comparing model performance,
+- and tracking high-level insights.
 
 ---
 
-## 🚀 Quick Start
+## Core Features
+
+### 1) Annotate Page
+The Annotate page contains six tabs:
+
+1. **Upload**
+   - Upload a video or images (ZIP/files).
+   - Extract frames at a selected interval.
+   - Save frames into a target folder.
+
+2. **Filter**
+   - Uses the latest model from `Model_Compare/new_model`.
+   - Uses YOLO baseline model from `Model_Compare/yolo model`.
+   - Compares both models frame-by-frame.
+   - Keeps only frames where the latest model performs worse.
+   - Writes selected frames to destination folder (default: `output_annotation`).
+
+3. **Augment**
+   - Applies augmentation variants to source images.
+   - Supports noise, blur, motion blur, brightness/contrast, rotation, fog.
+
+4. **Image Gallery**
+   - Browse uploaded/extracted images.
+   - Pagination and delete support.
+
+5. **Auto-Annotate**
+   - Runs YOLO auto-annotation over selected frames.
+   - Writes labels in YOLO TXT format.
+   - Includes class management through `classes.txt`.
+
+6. **Annotated Gallery**
+   - Visual review of annotations with rendered bounding boxes.
+   - Delete image + matching label together.
+
+---
+
+### 2) Model Comparison Page
+This page now combines **comparison + analytics** in one place.
+
+- Run evaluation for available models against `Model_Compare/ground_truth`.
+- Save visualized comparison outputs.
+- Append metrics to `Model_Compare/metrics.csv`.
+- View:
+  - overall precision/recall/F1,
+  - per-class metrics,
+  - comparison frames,
+  - metrics trend/history,
+  - multi-model comparison tables/charts.
+
+---
+
+### 3) Insights Page
+A lightweight summary dashboard:
+- frame count,
+- annotated image count,
+- label file count,
+- model run count,
+- latest run summary (model, precision, recall).
+
+---
+
+## Project Pipeline (Recommended)
+
+1. **Upload** raw video/images in Annotate → Upload.
+2. **Filter** hard frames in Annotate → Filter.
+3. **Augment** selected data in Annotate → Augment (optional).
+4. **Auto-Annotate** in Annotate → Auto-Annotate.
+5. **Review** in Annotate → Annotated Gallery.
+6. **Evaluate** model quality in Model Comparison.
+7. **Track status** in Insights.
+
+---
+
+## Folder Expectations
+
+Inside `automatic_annotation/Model_Compare`:
+
+- `new_model/` → your latest candidate model(s), `.pt`
+- `yolo model/` → YOLO baseline model(s), `.pt`
+- `ground_truth/` → evaluation images + YOLO labels
+- `output/` → generated comparison visualization outputs
+- `metrics.csv` → cumulative run metrics
+
+Main runtime folders:
+
+- `output_frames/` → extracted/uploaded frames
+- `output_annotation/` → annotation labels/images and default filter destination
+- `videos/` → uploaded video files
+
+---
+
+## Installation
 
 ### Prerequisites
+- Python 3.9+
+- pip
+- (Optional) GPU-enabled PyTorch for faster inference
 
-- Python 3.8+ (recommended: 3.10)
-- ffmpeg (for video segmentation)
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd edgeverse_project/automatic_annotation
-   ```
-
-2. **Create a virtual environment** (recommended)
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Install ffmpeg** (required for video segmentation)
-   ```bash
-   # macOS
-   brew install ffmpeg
-   
-   # Ubuntu/Debian
-   sudo apt-get install ffmpeg
-   
-   # Windows (using Chocolatey)
-   choco install ffmpeg
-   ```
-
-### Running the Application
+### Setup
 
 ```bash
+cd automatic_annotation
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+---
+
+## Run Instructions
+
+### Start Streamlit UI
+
+```bash
+cd automatic_annotation
+source ../venv/bin/activate  # or your active environment
 streamlit run streamlit_app.py
 ```
 
-The app will open at `http://localhost:8501`
+Open the URL shown by Streamlit (usually `http://localhost:8501`).
+
+### Optional: Run performance filter utility directly
+
+```bash
+cd ..
+python performance_testing/filter_frames_by_model_gap.py \
+  --mode filter \
+  --new-model automatic_annotation/Model_Compare/new_model/<latest_model>.pt \
+  --yolo-model "automatic_annotation/Model_Compare/yolo model/<yolo_model>.pt" \
+  --source-dir automatic_annotation/output_frames \
+  --destination-dir automatic_annotation/output_annotation \
+  --conf-thresh 0.25 \
+  --iou-thresh 0.40 \
+  --clear-destination
+```
+
+### Optional: Run evaluation mode directly
+
+```bash
+cd ..
+python performance_testing/filter_frames_by_model_gap.py \
+  --mode evaluate \
+  --model performance_testing/model/vapp_relu_320.pt \
+  --folder-path performance_testing/data/1 \
+  --output-dir performance_testing/output/1 \
+  --conf-thresh 0.25 \
+  --iou-thresh 0.50
+```
 
 ---
 
-## 📦 Key Scripts
+## Threshold Tuning (Filter Tab)
 
-| Script | Purpose |
-|--------|---------|
-| `streamlit_app.py` | Main web interface (1600+ lines) |
-| `auto_annotation.py` | YOLO-based auto-annotation engine |
-| `segment_video.py` | Video segmentation utility |
-| `data_augmentation.py` | Image augmentation functions |
-| `write_frames.py` | Frame extraction utility |
-| `create_dataset.py` | Dataset creation with train/val split |
-| `analyze_dataset.py` | Annotation statistics and analysis |
-| `model.py` | YOLO model utilities |
+- **Confidence threshold**
+  - Higher → fewer detections considered (stricter).
+  - Lower → more detections considered (looser).
 
----
+- **IoU threshold**
+  - Higher → tighter overlap required to count as a match.
+  - Lower → looser overlap accepted.
 
-## 🎨 Streamlit UI Features
-
-- **Video Upload**: Drag & drop or browse for video files
-- **Frame Extraction**: Configure interval (seconds) and preview
-- **Augmentation Settings**: Interactive sliders and checkboxes
-- **Auto-Annotation**: One-click YOLO processing
-- **Preview Gallery**: Browse annotated frames with bounding boxes
-- **Export Options**: Download annotations as ZIP
-- **Progress Tracking**: Real-time feedback on all operations
-- **Configuration Persistence**: Settings saved across sessions
+Practical effect: increasing either threshold typically marks more frames as poor.
 
 ---
 
-## 🛠️ System Requirements
+## Key Files
 
-### Minimum
-- CPU: Dual-core processor
-- RAM: 8GB
-- Storage: 5GB free space
-- OS: Windows 10, macOS 10.15+, Ubuntu 18.04+
-
-### Recommended
-- CPU: Quad-core or better
-- RAM: 16GB+
-- GPU: NVIDIA GPU with CUDA support (for faster inference)
-- Storage: 20GB+ SSD
-- OS: Latest versions
+- `streamlit_app.py` → main UI and workflows
+- `auto_annotation.py` → batch auto-label generation
+- `data_augmentation.py` → augmentation transforms
+- `Model_Compare/evaluate_models_against_ground_truth.py` → model-ground-truth evaluation + metrics logging
+- `../performance_testing/filter_frames_by_model_gap.py` → evaluate/filter CLI used by Filter tab
 
 ---
 
-## 📝 Notes & Best Practices
+## Troubleshooting
 
-1. **Model Weights**: Ensure YOLO model weights (`.pt` files) are present before running auto-annotation
-2. **Class Files**: Verify `class/new_classes.txt` contains your target classes
-3. **Video Format**: MP4 with H.264 codec recommended for best compatibility
-4. **Frame Rate**: Higher intervals (e.g., 2-5 seconds) reduce redundancy
-5. **Augmentation**: Use appropriately for your dataset
-6. **Disk Space**: Ensure sufficient space for frames and annotations
-7. **GPU Acceleration**: Install PyTorch with CUDA for faster processing
+- **No models found in Filter tab**
+  - Ensure `.pt` files exist in:
+    - `Model_Compare/new_model`
+    - `Model_Compare/yolo model`
 
----
+- **No frames selected by filter**
+  - Lower IoU and/or confidence thresholds.
+  - Verify source folder contains images.
 
-## 🐛 Troubleshooting
+- **Metrics not showing in Model Comparison**
+  - Run at least one evaluation from the page.
+  - Confirm `Model_Compare/metrics.csv` is writable.
 
-### General Issues
-
-**Issue**: YOLO model not found
-- **Solution**: Place `.pt` file in `automatic_annotation/` directory
-
-**Issue**: Video upload fails
-- **Solution**: Check file size or use video segmentation tool
-
-**Issue**: Frames not extracted
-- **Solution**: Verify OpenCV installation: `pip install opencv-python --upgrade`
-
-**Issue**: Augmentation errors
-- **Solution**: Check image format and ensure frames are valid
+- **Import errors in editor**
+  - Activate your virtual environment and install requirements.
 
 ---
 
-## 🤝 Contributing
+## Notes
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is open source. Please refer to the LICENSE file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- **Ultralytics YOLO**: For the exceptional object detection framework
-- **Streamlit**: For the intuitive web interface framework
-- **OpenCV**: For video and image processing capabilities
-
----
-
-## 📧 Support
-
-For questions, issues, or suggestions, please open an issue on GitHub.
-
----
-
-**Built with ❤️ for the computer vision community**
+- Filter currently copies selected image files to destination.
+- If you want recursive copy with source subfolder preservation or paired `.txt` label copy, that can be added.

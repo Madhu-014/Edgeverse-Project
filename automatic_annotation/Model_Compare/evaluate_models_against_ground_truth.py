@@ -1,3 +1,9 @@
+"""Model-vs-ground-truth comparison runner for multiple `.pt` models.
+
+This script evaluates one or more models against YOLO ground-truth labels,
+writes visualized prediction frames, and appends metrics to `metrics.csv`.
+"""
+
 import numpy as np
 import cv2
 import time
@@ -24,6 +30,7 @@ label_dict = {i: name for i, name in enumerate(class_list)}
 # YOLO GT LOADER
 # -------------------------------------------------
 def load_yolo_gt(label_path, img_w, img_h):
+    """Load YOLO txt labels and convert normalized boxes to pixel coordinates."""
     gt = []
     if not os.path.exists(label_path):
         return gt
@@ -49,6 +56,7 @@ def load_yolo_gt(label_path, img_w, img_h):
 # IOU
 # -------------------------------------------------
 def iou(boxA, boxB):
+    """Compute IoU for two `xyxy` boxes."""
     xA = max(boxA[0], boxB[0])
     yA = max(boxA[1], boxB[1])
     xB = min(boxA[2], boxB[2])
@@ -68,6 +76,12 @@ def evaluate_folder(
     iou_thresh=0.5,
     conf_thresh=0.25
 ):
+    """Evaluate a model on all JPG images in a folder and compute metrics.
+
+    - Draws GT boxes in green and prediction boxes in red.
+    - Tracks overall and per-class TP/FP/FN.
+    - Returns metric dictionary for logging.
+    """
     os.makedirs(output_dir, exist_ok=True)
 
     num_classes = len(label_dict)
@@ -178,6 +192,7 @@ def evaluate_folder(
 
 
 def log_metrics(csv_path, model_name, metrics):
+    """Append one evaluation run to CSV, expanding columns when needed."""
     run_row = {
         "run_id": datetime.now().strftime("%Y%m%d_%H%M%S"),
         "model_name": model_name,

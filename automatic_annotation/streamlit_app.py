@@ -8,6 +8,7 @@ st.set_page_config(
 )
 
 import io
+import json
 import os
 import sys
 import shutil
@@ -1242,7 +1243,14 @@ if "nav_page" not in st.session_state:
 # PAGE NAVIGATION - Using Query Params
 # ============================================================================
 page_param = st.query_params.get("page", "annotate")
-current_page = "Annotate" if page_param == "annotate" else "Comparison" if page_param == "model" else "Analysis"
+if page_param == "annotate":
+    current_page = "Annotate"
+elif page_param == "model":
+    current_page = "Model Comparison"
+elif page_param in ["insights", "analytics"]:
+    current_page = "Insights"
+else:
+    current_page = "Annotate"
 
 # Sidebar Navigation
 with st.sidebar:
@@ -1307,7 +1315,7 @@ with st.sidebar:
         if annotate_active:
             st.markdown('<div style="height: 2px; background: linear-gradient(90deg, #06b6d4, #8b5cf6); margin-top: -8px; border-radius: 1px;"></div>', unsafe_allow_html=True)
     
-    # Comparison Button
+    # Model Comparison Button
     model_active = page_param == "model"
     col1, col2 = st.columns([0.15, 0.85])
     with col1:
@@ -1318,14 +1326,14 @@ with st.sidebar:
         </svg>
         """, unsafe_allow_html=True)
     with col2:
-        if st.button("Comparison", key="nav_model", use_container_width=True):
+        if st.button("Model Comparison", key="nav_model", use_container_width=True):
             st.query_params["page"] = "model"
             st.rerun()
         if model_active:
             st.markdown('<div style="height: 2px; background: linear-gradient(90deg, #06b6d4, #8b5cf6); margin-top: -8px; border-radius: 1px;"></div>', unsafe_allow_html=True)
     
-    # Analysis Button
-    analytics_active = page_param == "analytics"
+    # Insights Button
+    analytics_active = page_param in ["insights", "analytics"]
     col1, col2 = st.columns([0.15, 0.85])
     with col1:
         st.markdown(f"""
@@ -1336,8 +1344,8 @@ with st.sidebar:
         </svg>
         """, unsafe_allow_html=True)
     with col2:
-        if st.button("Analysis", key="nav_analytics", use_container_width=True):
-            st.query_params["page"] = "analytics"
+        if st.button("Insights", key="nav_analytics", use_container_width=True):
+            st.query_params["page"] = "insights"
             st.rerun()
         if analytics_active:
             st.markdown('<div style="height: 2px; background: linear-gradient(90deg, #06b6d4, #8b5cf6); margin-top: -8px; border-radius: 1px;"></div>', unsafe_allow_html=True)
@@ -1400,8 +1408,26 @@ if current_page == "Annotate":
     </div>
     """, unsafe_allow_html=True)
     
+    compare_base_dir = BASE_DIR / "Model_Compare"
+    filter_new_model_dir = compare_base_dir / "new_model"
+    filter_yolo_model_dir = compare_base_dir / "yolo model"
+    filter_runner_script = BASE_DIR.parent / "performance_testing" / "filter_frames_by_model_gap.py"
+
+    def latest_model_file(model_dir: Path):
+        """Return the most recently modified `.pt` model file in a directory."""
+        model_dir.mkdir(parents=True, exist_ok=True)
+        model_files = sorted(model_dir.glob("*.pt"), key=lambda path: path.stat().st_mtime)
+        return model_files[-1] if model_files else None
+
+    def list_yolo_models(model_dir: Path):
+        """List YOLO baseline models, preferring filenames containing `yolo`."""
+        model_dir.mkdir(parents=True, exist_ok=True)
+        all_models = sorted(model_dir.glob("*.pt"))
+        yolo_models = [path for path in all_models if "yolo" in path.stem.lower()]
+        return yolo_models if yolo_models else all_models
+
     # Tabs for different sections
-    tabs = st.tabs(["Upload", "Augment", "Image Gallery", "Auto-Annotate", "Annotated Gallery"])
+    tabs = st.tabs(["Upload", "Filter", "Augment", "Image Gallery", "Auto-Annotate", "Annotated Gallery"])
     
     # TAB 1: UPLOAD
     with tabs[0]:
@@ -1496,8 +1522,141 @@ if current_page == "Annotate":
                     st.success(f"✓ Cleared previous images and saved {len(up_imgs) if up_imgs else 'ZIP'} new images to {out_dir}")
                     st.balloons()
     
-    # TAB 2: AUGMENT
+    # TAB 2: FILTER
     with tabs[1]:
+        st.markdown("""
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="section-title">Model-Based Frame Filter</h3>
+                    <p class="section-desc">Keep only frames where latest model performs worse than YOLO</p>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        latest_new_model = latest_model_file(filter_new_model_dir)
+        yolo_candidates = list_yolo_models(filter_yolo_model_dir)
+
+        source_filter_dir = st.text_input("Source frames folder", value=str(FRAMES_DIR), key="filter_source_folder")
+        destination_filter_dir = st.text_input("Destination folder", value=str(ANNOT_DIR), key="filter_destination_folder")
+
+        if latest_new_model:
+            st.info(f"Latest new model: `{latest_new_model.name}`")
+        else:
+            st.warning(f"No `.pt` model found in `{filter_new_model_dir}`")
+
+        if yolo_candidates:
+            yolo_model_choice = st.selectbox(
+                "YOLO model",
+                options=yolo_candidates,
+                format_func=lambda path: path.name,
+                key="filter_yolo_model_select",
+            )
+        else:
+            yolo_model_choice = None
+            st.warning(f"No `.pt` model found in `{filter_yolo_model_dir}`")
+
+        st.caption("Threshold guidance: adjust these to control how strict the filter is when deciding whether your model is worse than YOLO.")
+        conf_threshold_filter = st.slider(
+            "Confidence threshold",
+            0.05,
+            0.95,
+            0.25,
+            0.05,
+            key="filter_conf_threshold",
+            help="Only detections with confidence above this value are considered. Higher values keep fewer boxes (stricter), lower values keep more boxes (looser).",
+        )
+        iou_threshold_filter = st.slider(
+            "IoU threshold",
+            0.10,
+            0.95,
+            0.40,
+            0.05,
+            key="filter_iou_threshold",
+            help="Minimum overlap needed to treat boxes as matching. Higher values require tighter box alignment, lower values allow looser matches.",
+        )
+        st.info(
+            "Higher confidence or higher IoU generally marks more frames as poor (more strict). "
+            "Lower confidence or lower IoU generally marks fewer frames as poor (more lenient)."
+        )
+
+        if st.button("Run Filter", type="primary", use_container_width=True):
+            if latest_new_model is None:
+                st.error("No latest model found in new_model folder.")
+            elif yolo_model_choice is None:
+                st.error("No YOLO model found in model folder.")
+            elif not filter_runner_script.exists():
+                st.error(f"Filter runner not found: {filter_runner_script}")
+            else:
+                src_path = Path(source_filter_dir)
+                if not src_path.exists():
+                    st.error(f"Source folder does not exist: {src_path}")
+                else:
+                    with st.spinner("Filtering frames where latest model is worse than YOLO..."):
+                        command = [
+                            sys.executable,
+                            str(filter_runner_script),
+                            "--mode",
+                            "filter",
+                            "--new-model",
+                            str(latest_new_model),
+                            "--yolo-model",
+                            str(yolo_model_choice),
+                            "--source-dir",
+                            str(src_path),
+                            "--destination-dir",
+                            str(destination_filter_dir),
+                            "--conf-thresh",
+                            str(conf_threshold_filter),
+                            "--iou-thresh",
+                            str(iou_threshold_filter),
+                            "--clear-destination",
+                        ]
+
+                        proc = subprocess.run(
+                            command,
+                            cwd=str(BASE_DIR.parent),
+                            capture_output=True,
+                            text=True,
+                        )
+
+                    if proc.returncode != 0:
+                        st.error("Frame filtering failed.")
+                        if proc.stderr:
+                            st.code(proc.stderr)
+                    else:
+                        summary = None
+                        output_lines = [line.strip() for line in proc.stdout.splitlines() if line.strip()]
+                        for line in reversed(output_lines):
+                            try:
+                                summary = json.loads(line)
+                                break
+                            except Exception:
+                                continue
+
+                        if summary is None:
+                            st.warning("Filter completed, but summary was not found.")
+                            if proc.stdout:
+                                st.code(proc.stdout)
+                        else:
+                            st.success("✓ Filtering completed. Destination now contains only poor-performing frames.")
+                            metric_col1, metric_col2, metric_col3 = st.columns(3)
+                            with metric_col1:
+                                st.metric("Total Images", int(summary.get("total_images", 0)))
+                            with metric_col2:
+                                st.metric("Selected (Poor)", int(summary.get("selected_images", 0)))
+                            with metric_col3:
+                                st.metric("Ignored", int(summary.get("ignored_images", 0)))
+                            st.caption(f"Saved to: {summary.get('destination_dir', destination_filter_dir)}")
+
+    # TAB 3: AUGMENT
+    with tabs[2]:
         st.markdown("""
         <div class="section-card">
             <div class="section-header">
@@ -1571,8 +1730,8 @@ if current_page == "Annotate":
             st.success(f"✓ Created {written} augmented images and saved to output frames")
             st.balloons()
     
-    # TAB 3: IMAGE GALLERY (BEFORE ANNOTATION)
-    with tabs[2]:
+    # TAB 4: IMAGE GALLERY (BEFORE ANNOTATION)
+    with tabs[3]:
         st.markdown("""
         <div class="section-card">
             <div class="section-header">
@@ -1595,11 +1754,13 @@ if current_page == "Annotate":
         IMAGES_PER_PAGE = 12
         
         def natural_sort_key(path):
+            """Sort file names naturally (e.g., frame2 before frame10)."""
             import re
             name = path.name
             return [int(s) if s.isdigit() else s.lower() for s in re.split(r'(\d+)', name)]
         
         def get_all_images_gallery(dir_path):
+            """Collect all gallery images recursively from the selected frame directory."""
             imgs = []
             if dir_path.exists():
                 for root, _, files in os.walk(dir_path):
@@ -1609,6 +1770,7 @@ if current_page == "Annotate":
             return sorted(imgs, key=natural_sort_key)
         
         def load_image_gallery(path):
+            """Load one image as RGB PIL for Streamlit display."""
             img = cv2.imread(str(path))
             if img is None:
                 return None
@@ -1633,6 +1795,7 @@ if current_page == "Annotate":
             col_prev, col_page, col_next = st.columns([0.8, 2, 0.8])
             with col_prev:
                 def on_prev_click():
+                    """Move image gallery pagination to previous page."""
                     if st.session_state["gallery_page"] > 1:
                         st.session_state["gallery_page"] -= 1
                 st.button("◀ Previous", key="gallery_prev_btn", use_container_width=True, on_click=on_prev_click)
@@ -1640,6 +1803,7 @@ if current_page == "Annotate":
             with col_page:
                 pages = list(range(1, total_pages + 1))
                 def on_page_change():
+                    """Sync image gallery page selector with session state."""
                     st.session_state["gallery_page"] = st.session_state["gallery_page_select"]
                 current_page = st.selectbox(
                     "Page",
@@ -1653,6 +1817,7 @@ if current_page == "Annotate":
             
             with col_next:
                 def on_next_click():
+                    """Move image gallery pagination to next page."""
                     if st.session_state["gallery_page"] < total_pages:
                         st.session_state["gallery_page"] += 1
                 st.button("Next ▶", key="gallery_next_btn", use_container_width=True, on_click=on_next_click)
@@ -1695,8 +1860,8 @@ if current_page == "Annotate":
             </div>
             """, unsafe_allow_html=True)
     
-    # TAB 4: AUTO-ANNOTATE
-    with tabs[3]:
+    # TAB 5: AUTO-ANNOTATE
+    with tabs[4]:
         st.markdown("""
         <div class="section-card">
             <div class="section-header">
@@ -1729,12 +1894,14 @@ if current_page == "Annotate":
         CLASSES_TXT = Path(annot_dir_input) / "classes.txt"
         
         def load_classes():
+            """Load currently configured class list from classes.txt."""
             if CLASSES_TXT.exists():
                 with open(CLASSES_TXT) as f:
                     return [line.strip() for line in f if line.strip()]
             return []
         
         def save_classes(classes_list):
+            """Persist class list to classes.txt used by auto-annotation."""
             CLASSES_TXT.parent.mkdir(parents=True, exist_ok=True)
             with open(CLASSES_TXT, "w") as f:
                 f.write("\n".join(classes_list) + "\n" if classes_list else "")
@@ -1768,6 +1935,7 @@ if current_page == "Annotate":
             annot_dir = Path(annot_dir_input)
             
             def list_images(dir_path, limit=30):
+                """Quickly sample image files to validate frame availability."""
                 imgs = []
                 for root, _, files in os.walk(dir_path):
                     for f in files:
@@ -1796,8 +1964,8 @@ if current_page == "Annotate":
                 else:
                     st.error(f"❌ Failed with code {proc.returncode}")
     
-    # TAB 5: ANNOTATED GALLERY (AFTER ANNOTATION)
-    with tabs[4]:
+    # TAB 6: ANNOTATED GALLERY (AFTER ANNOTATION)
+    with tabs[5]:
         st.markdown("""
         <div class="section-card">
             <div class="section-header">
@@ -1819,6 +1987,7 @@ if current_page == "Annotate":
         ANNOTATED_IMAGES_PER_PAGE = 12
         
         def get_all_annotated_images_ann(dir_path):
+            """Collect all annotated images recursively for review gallery."""
             imgs = []
             if dir_path.exists():
                 for root, _, files in os.walk(dir_path):
@@ -1828,12 +1997,14 @@ if current_page == "Annotate":
             return sorted(imgs, key=natural_sort_key)
         
         def load_image_ann(path):
+            """Load one annotated image as RGB PIL."""
             img = cv2.imread(str(path))
             if img is None:
                 return None
             return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
         
         def draw_boxes_ann(img_pil, txt_path):
+            """Render YOLO txt boxes on top of a preview image."""
             img = np.array(img_pil).copy()
             h, w = img.shape[:2]
             if txt_path.exists():
@@ -1872,6 +2043,7 @@ if current_page == "Annotate":
             col_prev, col_page, col_next = st.columns([0.8, 2, 0.8])
             with col_prev:
                 def on_prev_click_ann():
+                    """Move annotated gallery pagination to previous page."""
                     if st.session_state["annotated_page"] > 1:
                         st.session_state["annotated_page"] -= 1
                 st.button("◀ Previous", key="annotated_prev_btn", use_container_width=True, on_click=on_prev_click_ann)
@@ -1879,6 +2051,7 @@ if current_page == "Annotate":
             with col_page:
                 pages = list(range(1, total_annotated_pages + 1))
                 def on_page_change_ann():
+                    """Sync annotated gallery page selector with session state."""
                     st.session_state["annotated_page"] = st.session_state["annotated_page_select"]
                 current_page = st.selectbox(
                     "Page",
@@ -1892,6 +2065,7 @@ if current_page == "Annotate":
             
             with col_next:
                 def on_next_click_ann():
+                    """Move annotated gallery pagination to next page."""
                     if st.session_state["annotated_page"] < total_annotated_pages:
                         st.session_state["annotated_page"] += 1
                 st.button("Next ▶", key="annotated_next_btn", use_container_width=True, on_click=on_next_click_ann)
@@ -1933,8 +2107,8 @@ if current_page == "Annotate":
         else:
             st.info("No annotated images yet")
 
-# COMPARISON PAGE
-elif current_page == "Comparison":
+# MODEL COMPARISON PAGE
+elif current_page == "Model Comparison":
     st.markdown("""
     <div class="hero-header">
         <h1 class="hero-title">
@@ -1968,6 +2142,7 @@ elif current_page == "Comparison":
     
     # Helper functions
     def get_available_models():
+        """Return model names available for evaluation in comparison page."""
         models = []
         # Get models from model folder (looking for .pt files)
         if MODELS_DIR.exists():
@@ -1983,7 +2158,7 @@ elif current_page == "Comparison":
         return models
     
     def get_model_output_frames(model_name):
-        """Get comparison output frames for a model"""
+        """Get previewable comparison output frames for selected model."""
         # Handle "Latest (new_model)" special case
         if model_name == "Latest (new_model)":
             model_output_dir = COMPARE_OUTPUT_DIR / "new_model"
@@ -1996,6 +2171,7 @@ elif current_page == "Comparison":
         return []
 
     def get_latest_new_model_info():
+        """Return metadata for the newest model in `new_model` directory."""
         if not NEW_MODEL_DIR.exists():
             return None
         latest_models = sorted(NEW_MODEL_DIR.glob("*.pt"), key=lambda p: p.stat().st_mtime)
@@ -2009,6 +2185,7 @@ elif current_page == "Comparison":
         }
 
     def get_class_label_map():
+        """Load class id -> label map from comparison ground-truth classes file."""
         class_file = GROUND_TRUTH_DIR / "class" / "classes.txt"
         class_map = {}
         if class_file.exists():
@@ -2023,10 +2200,11 @@ elif current_page == "Comparison":
         return class_map
 
     def metric_safe_label(label):
+        """Normalize a class label into a metrics-friendly key suffix."""
         return str(label).strip().lower().replace(" ", "_").replace("-", "_")
     
     def parse_yolo_annotation(txt_path):
-        """Parse YOLO format annotation (class_id x_center y_center width height)"""
+        """Parse YOLO txt format: class_id x_center y_center width height."""
         boxes = []
         if not txt_path.exists():
             return boxes
@@ -2048,7 +2226,7 @@ elif current_page == "Comparison":
         return boxes
     
     def compare_annotations(gt_txt, pred_txt, img_shape):
-        """Compare ground truth and prediction annotations using IoU"""
+        """Compare GT and predictions and compute match/FP/FN statistics."""
         gt_boxes = parse_yolo_annotation(gt_txt)
         pred_boxes = parse_yolo_annotation(pred_txt)
         
@@ -2074,6 +2252,7 @@ elif current_page == "Comparison":
         
         # Calculate IoU
         def calculate_iou(box1, box2):
+            """Calculate IoU between two class-aware pixel-coordinate boxes."""
             _, x1_1, y1_1, x2_1, y2_1 = box1
             _, x1_2, y1_2, x2_2, y2_2 = box2
             
@@ -2158,7 +2337,7 @@ elif current_page == "Comparison":
         return metrics
     
     def run_model_comparison(model_name):
-        """Compare model predictions with ground truth"""
+        """Run full model evaluation against comparison ground-truth dataset."""
         from ultralytics import YOLO
         
         results = {
@@ -2308,7 +2487,7 @@ elif current_page == "Comparison":
         return results
     
     def save_metrics_to_csv(metrics_dict):
-        """Append metrics to CSV file"""
+        """Append one metrics row to the comparison metrics CSV."""
         df_new = pd.DataFrame([metrics_dict])
         if METRICS_CSV.exists():
             df_existing = pd.read_csv(METRICS_CSV)
@@ -2318,6 +2497,7 @@ elif current_page == "Comparison":
         df_combined.to_csv(METRICS_CSV, index=False)
 
     def resolve_metric_columns(df):
+        """Support both legacy and current metric column naming in dashboards."""
         model_col = 'model_name' if 'model_name' in df.columns else 'model'
         date_col = 'date' if 'date' in df.columns else 'timestamp'
         prec_col = 'overall_precision' if 'overall_precision' in df.columns else 'precision'
@@ -2325,6 +2505,7 @@ elif current_page == "Comparison":
         return model_col, date_col, prec_col, rec_col
 
     def build_per_class_table(metrics_row):
+        """Build display-ready per-class precision/recall/F1 table from one run."""
         class_rows = []
         for col in metrics_row.index:
             if not col.startswith('precision_'):
@@ -2549,62 +2730,17 @@ elif current_page == "Comparison":
         csv_data = metrics_df.to_csv(index=False)
         st.download_button("Download Metrics CSV", csv_data, "metrics.csv", "text/csv")
 
-# ANALYSIS PAGE
-elif current_page == "Analysis":
-    st.markdown("""
-    <div class="hero-header">
-        <h1 class="hero-title">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:8px;">
-                <path d="M3 3v18h18"></path>
-                <path d="M7 14l3-3 3 2 4-5"></path>
-                <circle cx="10" cy="11" r="1"></circle>
-                <circle cx="13" cy="13" r="1"></circle>
-                <circle cx="17" cy="8" r="1"></circle>
-            </svg>
-            Analysis
-        </h1>
-        <p class="hero-subtitle">Track model quality trends, per-class behavior, and comparative performance over time</p>
-        <div class="hero-badges">
-            <span class="hero-badge">KPI Snapshot</span>
-            <span class="hero-badge">Class-Wise Insights</span>
-            <span class="hero-badge">Trend Tracking</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Get available models and metrics
-    COMPARE_BASE_DIR = Path(__file__).resolve().parent / "Model_Compare"
-    MODELS_DIR = COMPARE_BASE_DIR / "model"
-    METRICS_CSV = COMPARE_BASE_DIR / "metrics.csv"
-    
-    # Get models
-    models = []
-    if MODELS_DIR.exists():
-        pt_files = sorted(MODELS_DIR.glob("*.pt"))
-        for pt_file in pt_files:
-            models.append(pt_file.stem)
-    
-    # Load metrics if available
-    metrics_df = None
-    if METRICS_CSV.exists():
-        metrics_df = pd.read_csv(METRICS_CSV)
-    
-    # Tabs for different visualizations
-    tab1, tab2, tab3, tab4 = st.tabs(["Model Performance", "Per-Class Metrics", "Metrics History", "Model Comparison"])
-    
-    with tab1:
-        st.markdown("""
-        <div style="display:flex;align-items:center;gap:0.55rem;margin-bottom:0.5rem;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><path d="M3 3v18h18"></path><path d="M7 14l3-3 3 2 4-5"></path></svg>
-            <h3 style="margin:0;color:#e2e8f0;">Latest Model Metrics</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        if metrics_df is not None and len(metrics_df) > 0:
-            model_col = 'model_name' if 'model_name' in metrics_df.columns else 'model'
-            date_col = 'date' if 'date' in metrics_df.columns else 'timestamp'
-            prec_col = 'overall_precision' if 'overall_precision' in metrics_df.columns else 'precision'
-            rec_col = 'overall_recall' if 'overall_recall' in metrics_df.columns else 'recall'
+        st.divider()
+        st.markdown("### Advanced Analytics")
 
+        analytics_tab1, analytics_tab2, analytics_tab3, analytics_tab4 = st.tabs([
+            "Model Performance",
+            "Per-Class Metrics",
+            "Metrics History",
+            "Model Comparison",
+        ])
+
+        with analytics_tab1:
             latest_metrics = metrics_df.copy()
             latest_metrics[date_col] = pd.to_datetime(latest_metrics[date_col], errors='coerce')
             latest_metrics = latest_metrics.sort_values(date_col).groupby(model_col, as_index=False).tail(1)
@@ -2628,10 +2764,7 @@ elif current_page == "Analysis":
                 with c3:
                     st.metric("Models Tracked", f"{kpi_df['Model'].nunique()}")
 
-                st.markdown("### Overall Metrics Comparison")
                 st.bar_chart(kpi_df.set_index('Model')[['Precision', 'Recall', 'F1-Score']])
-
-                st.markdown("### Latest Snapshot")
                 st.dataframe(
                     kpi_df,
                     use_container_width=True,
@@ -2645,30 +2778,19 @@ elif current_page == "Analysis":
                 )
             else:
                 st.info("No metrics available yet. Run model comparison to generate metrics.")
-        else:
-            st.info("No metrics available. Run model comparison on the Comparison page.")
-    
-    with tab2:
-        st.markdown("""
-        <div style="display:flex;align-items:center;gap:0.55rem;margin-bottom:0.5rem;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M3 3h18v18H3z"></path><path d="M3 9h18"></path><path d="M9 9v12"></path></svg>
-            <h3 style="margin:0;color:#e2e8f0;">Per-Class Performance Analysis</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        if metrics_df is not None and len(metrics_df) > 0:
-            model_col = 'model_name' if 'model_name' in metrics_df.columns else 'model'
-            date_col = 'date' if 'date' in metrics_df.columns else 'timestamp'
+
+        with analytics_tab2:
             per_class_cols = [col for col in metrics_df.columns if col.startswith('precision_') or col.startswith('recall_')]
 
             if per_class_cols:
                 work_df = metrics_df.copy()
                 work_df[date_col] = pd.to_datetime(work_df[date_col], errors='coerce')
 
-                available_models = sorted(work_df[model_col].dropna().unique().tolist())
-                selected_model = st.selectbox("Select Model", available_models, key="per_class_model_select")
+                available_models_pc = sorted(work_df[model_col].dropna().unique().tolist())
+                selected_model_pc = st.selectbox("Select Model", available_models_pc, key="model_compare_per_class_model_select")
 
-                if selected_model:
-                    model_latest = work_df[work_df[model_col] == selected_model].sort_values(date_col).tail(1)
+                if selected_model_pc:
+                    model_latest = work_df[work_df[model_col] == selected_model_pc].sort_values(date_col).tail(1)
                     if len(model_latest) > 0:
                         row = model_latest.iloc[0]
                         class_metrics = []
@@ -2697,7 +2819,6 @@ elif current_page == "Analysis":
 
                         if class_metrics:
                             class_df = pd.DataFrame(class_metrics).sort_values('F1', ascending=False)
-                            st.markdown(f"### {selected_model} - Per-Class Matrix")
                             st.bar_chart(class_df.set_index('Class')[['Precision', 'Recall', 'F1']])
                             st.dataframe(
                                 class_df,
@@ -2715,22 +2836,8 @@ elif current_page == "Analysis":
                             st.info("No per-class metrics available for this model.")
             else:
                 st.info("No per-class metrics found in the data. Run model comparison to generate per-class metrics.")
-        else:
-            st.info("No metrics available yet.")
-    
-    with tab3:
-        st.markdown("""
-        <div style="display:flex;align-items:center;gap:0.55rem;margin-bottom:0.5rem;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>
-            <h3 style="margin:0;color:#e2e8f0;">Metrics History Over Time</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        if metrics_df is not None and len(metrics_df) > 0:
-            model_col = 'model_name' if 'model_name' in metrics_df.columns else 'model'
-            date_col = 'date' if 'date' in metrics_df.columns else 'timestamp'
-            prec_col = 'overall_precision' if 'overall_precision' in metrics_df.columns else 'precision'
-            rec_col = 'overall_recall' if 'overall_recall' in metrics_df.columns else 'recall'
 
+        with analytics_tab3:
             history_df = metrics_df.copy()
             history_df[date_col] = pd.to_datetime(history_df[date_col], errors='coerce')
             history_df = history_df.dropna(subset=[date_col]).sort_values(date_col)
@@ -2740,7 +2847,7 @@ elif current_page == "Analysis":
                 "Models",
                 options=model_opts,
                 default=model_opts,
-                key="analytics_history_models"
+                key="model_compare_history_models"
             )
 
             if selected_history_models:
@@ -2749,7 +2856,7 @@ elif current_page == "Analysis":
             metric_choice = st.segmented_control(
                 "Metric",
                 ["Precision", "Recall"],
-                key="analytics_history_metric",
+                key="model_compare_history_metric",
                 default="Precision"
             )
 
@@ -2759,7 +2866,6 @@ elif current_page == "Analysis":
                 st.line_chart(chart_df)
                 st.area_chart(chart_df)
 
-            st.write("**Detailed Metrics Table**")
             st.dataframe(
                 history_df.sort_values(date_col, ascending=False),
                 use_container_width=True,
@@ -2772,22 +2878,8 @@ elif current_page == "Analysis":
                     rec_col: st.column_config.ProgressColumn("Overall Recall", format="%.1f%%", min_value=0.0, max_value=1.0),
                 }
             )
-        else:
-            st.info("No metrics history available yet.")
-    
-    with tab4:
-        st.markdown("""
-        <div style="display:flex;align-items:center;gap:0.55rem;margin-bottom:0.5rem;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><path d="M4 19V5"></path><path d="M10 19V9"></path><path d="M16 19V7"></path><path d="M22 19V11"></path></svg>
-            <h3 style="margin:0;color:#e2e8f0;">Model Comparison Dashboard</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        if metrics_df is not None and len(metrics_df) > 0:
-            model_col = 'model_name' if 'model_name' in metrics_df.columns else 'model'
-            date_col = 'date' if 'date' in metrics_df.columns else 'timestamp'
-            prec_col = 'overall_precision' if 'overall_precision' in metrics_df.columns else 'precision'
-            rec_col = 'overall_recall' if 'overall_recall' in metrics_df.columns else 'recall'
 
+        with analytics_tab4:
             latest_metrics = metrics_df.copy()
             latest_metrics[date_col] = pd.to_datetime(latest_metrics[date_col], errors='coerce')
             latest_metrics = latest_metrics.sort_values(date_col).groupby(model_col, as_index=False).tail(1)
@@ -2799,14 +2891,12 @@ elif current_page == "Analysis":
                     axis=1
                 )
 
-                st.markdown("### Overall Model Comparison")
                 overview = latest_metrics[[model_col, prec_col, rec_col, 'F1-Score']].set_index(model_col)
                 overview.columns = ['Precision', 'Recall', 'F1-Score']
                 st.bar_chart(overview)
 
                 per_class_cols = [col for col in latest_metrics.columns if col.startswith('precision_') or col.startswith('recall_')]
                 if per_class_cols:
-                    st.markdown("### Per-Class Comparison")
                     classes = set()
                     for col in per_class_cols:
                         if col.startswith('precision_'):
@@ -2816,11 +2906,11 @@ elif current_page == "Analysis":
 
                     classes = sorted(classes)
                     if classes:
-                        selected_class = st.selectbox("Select Class", classes, key="class_comparison_select")
+                        selected_class = st.selectbox("Select Class", classes, key="model_compare_class_comparison_select")
                         metric_type = st.segmented_control(
                             "Compare",
                             ["Precision", "Recall"],
-                            key="class_comp_metric",
+                            key="model_compare_class_comp_metric",
                             default="Precision"
                         )
 
@@ -2839,7 +2929,6 @@ elif current_page == "Analysis":
                                 }
                             )
 
-                st.markdown("### Detailed Comparison Table")
                 display_cols = [model_col, prec_col, rec_col, 'F1-Score']
                 for col in ['matched_boxes', 'false_positives', 'false_negatives', 'total_frames']:
                     if col in latest_metrics.columns:
@@ -2865,8 +2954,85 @@ elif current_page == "Analysis":
                 )
             else:
                 st.info("No models compared yet.")
-        else:
-            st.info("No metrics available. Run model comparison first.")
+
+# INSIGHTS PAGE
+elif current_page == "Insights":
+    st.markdown("""
+    <div class="hero-header">
+        <h1 class="hero-title">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:8px;">
+                <path d="M3 3v18h18"></path>
+                <path d="M7 14l3-3 3 2 4-5"></path>
+                <circle cx="10" cy="11" r="1"></circle>
+                <circle cx="13" cy="13" r="1"></circle>
+                <circle cx="17" cy="8" r="1"></circle>
+            </svg>
+            Insights
+        </h1>
+        <p class="hero-subtitle">Quick summary of your annotation and model comparison workspace</p>
+        <div class="hero-badges">
+            <span class="hero-badge">Run Summary</span>
+            <span class="hero-badge">Data Health</span>
+            <span class="hero-badge">Next Actions</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    compare_base_dir = Path(__file__).resolve().parent / "Model_Compare"
+    metrics_csv = compare_base_dir / "metrics.csv"
+    frames_dir = Path(st.session_state.get("frames_dir", str(FRAMES_DIR)))
+    annot_dir = Path(st.session_state.get("annot_dir", str(ANNOT_DIR)))
+
+    def count_images(folder_path):
+        """Count all image files recursively in a folder for Insights summary."""
+        if not folder_path.exists():
+            return 0
+        return len([
+            path for path in folder_path.rglob("*")
+            if path.is_file() and path.suffix.lower() in [".jpg", ".jpeg", ".png", ".bmp"]
+        ])
+
+    frame_count = count_images(frames_dir)
+    annot_image_count = count_images(annot_dir)
+    label_count = len(list(annot_dir.rglob("*.txt"))) if annot_dir.exists() else 0
+
+    metrics_df = pd.read_csv(metrics_csv) if metrics_csv.exists() else pd.DataFrame()
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Frames", frame_count)
+    with col2:
+        st.metric("Annotated Images", annot_image_count)
+    with col3:
+        st.metric("Label Files", label_count)
+    with col4:
+        st.metric("Model Runs", len(metrics_df) if len(metrics_df) > 0 else 0)
+
+    st.divider()
+
+    if len(metrics_df) > 0:
+        model_col = 'model_name' if 'model_name' in metrics_df.columns else 'model'
+        date_col = 'date' if 'date' in metrics_df.columns else 'timestamp'
+        prec_col = 'overall_precision' if 'overall_precision' in metrics_df.columns else 'precision'
+        rec_col = 'overall_recall' if 'overall_recall' in metrics_df.columns else 'recall'
+
+        work_df = metrics_df.copy()
+        work_df[date_col] = pd.to_datetime(work_df[date_col], errors='coerce')
+        work_df = work_df.sort_values(date_col)
+        latest = work_df.tail(1).iloc[0]
+
+        st.markdown("### Latest Run")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.metric("Model", str(latest.get(model_col, "-")))
+        with c2:
+            st.metric("Precision", f"{float(latest.get(prec_col, 0.0)):.2%}")
+        with c3:
+            st.metric("Recall", f"{float(latest.get(rec_col, 0.0)):.2%}")
+
+        st.caption("Detailed analytics, comparisons, and trends are available in the Model Comparison page.")
+    else:
+        st.info("No model metrics found yet. Run at least one evaluation in Model Comparison.")
 
 
 
