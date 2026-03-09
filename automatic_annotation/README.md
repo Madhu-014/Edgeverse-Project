@@ -24,8 +24,12 @@ The Annotate page contains six tabs:
    - Uses the latest model from `Model_Compare/new_model`.
    - Uses YOLO baseline model from `Model_Compare/yolo model`.
    - Compares both models frame-by-frame.
-   - Keeps only frames where the latest model performs worse.
-   - Writes selected frames to destination folder (default: `output_annotation`).
+   - Splits output into two folders:
+     - poor frames: latest model performs worse than YOLO,
+     - other frames: latest model is same/better than YOLO.
+   - Default output locations:
+     - `output_annotation/filtered_poor`
+     - `output_annotation/filtered_other`
 
 3. **Augment**
    - Applies augmentation variants to source images.
@@ -75,6 +79,7 @@ A lightweight summary dashboard:
 
 1. **Upload** raw video/images in Annotate → Upload.
 2. **Filter** hard frames in Annotate → Filter.
+  - Review either split set in Annotate → Image Gallery by changing folder source.
 3. **Augment** selected data in Annotate → Augment (optional).
 4. **Auto-Annotate** in Annotate → Auto-Annotate.
 5. **Review** in Annotate → Annotated Gallery.
@@ -140,7 +145,8 @@ python performance_testing/filter_frames_by_model_gap.py \
   --new-model automatic_annotation/Model_Compare/new_model/<latest_model>.pt \
   --yolo-model "automatic_annotation/Model_Compare/yolo model/<yolo_model>.pt" \
   --source-dir automatic_annotation/output_frames \
-  --destination-dir automatic_annotation/output_annotation \
+  --destination-dir automatic_annotation/output_annotation/filtered_poor \
+  --other-destination-dir automatic_annotation/output_annotation/filtered_other \
   --conf-thresh 0.25 \
   --iou-thresh 0.40 \
   --clear-destination
@@ -178,8 +184,15 @@ Practical effect: increasing either threshold typically marks more frames as poo
 ## Key Files
 
 - `streamlit_app.py` → main UI and workflows
-- `auto_annotation.py` → batch auto-label generation
-- `data_augmentation.py` → augmentation transforms
+- `data_augmentation.py` → augmentation transforms used by Streamlit workflow
+- `core/class_manager.py` → class bootstrap/read/write helpers
+- `core/gallery_utils.py` → gallery file listing and preview drawing helpers
+- `core/comparison_metrics.py` → modular comparison and metric helper functions
+- `tools/auto_annotation_runner.py` → batch auto-label generation utility
+- `tools/segment_video.py` → large-video segmentation helper
+- `tools/create_dataset.py` → dataset split utility
+- `tools/analyze_dataset.py` → annotation statistics utility
+- `tools/write_frames.py` → frame extraction helper utility
 - `Model_Compare/evaluate_models_against_ground_truth.py` → model-ground-truth evaluation + metrics logging
 - `../performance_testing/filter_frames_by_model_gap.py` → evaluate/filter CLI used by Filter tab
 
@@ -207,5 +220,5 @@ Practical effect: increasing either threshold typically marks more frames as poo
 
 ## Notes
 
-- Filter currently copies selected image files to destination.
-- If you want recursive copy with source subfolder preservation or paired `.txt` label copy, that can be added.
+- Filter copies source images into split folders (`filtered_poor` and optional `filtered_other`).
+- Filter also copies matching YOLO label files (`same_name.txt`) when present in the source folder.

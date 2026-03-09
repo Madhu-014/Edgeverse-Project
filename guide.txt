@@ -1,0 +1,220 @@
+EDGEVERSE PROJECT SETUP GUIDE
+=============================
+
+This guide explains what folders and model files must exist before running the app.
+Use this after cloning/downloading the project.
+
+--------------------------------------------------
+1) PROJECT ROOT
+--------------------------------------------------
+Expected root:
+- edgeverse_project/
+  - automatic_annotation/
+  - performance_testing/
+
+Run all setup commands from:
+- /path/to/edgeverse_project
+
+--------------------------------------------------
+2) PYTHON ENVIRONMENT
+--------------------------------------------------
+From project root:
+
+1. Create env (if not present):
+   python -m venv venv
+
+2. Activate env:
+   macOS/Linux:
+   source venv/bin/activate
+
+3. Install packages:
+   cd automatic_annotation
+   pip install -r requirements.txt
+
+--------------------------------------------------
+3) REQUIRED FOLDERS (AUTO-ANNOTATION APP)
+--------------------------------------------------
+Inside automatic_annotation/, ensure these exist:
+
+- videos/
+  Purpose: uploaded source videos
+
+- output_frames/
+  Purpose: extracted/uploaded/augmented frames
+
+- output_annotation/
+  Purpose: output annotated images + label txt files
+  Note: app now auto-creates this and initializes classes.txt on first run.
+
+- class/
+  Must contain:
+  - old_classes.txt
+  - new_classes.txt
+
+- core/
+  Contains modular replaceable logic blocks used by streamlit app.
+
+- tools/
+  Contains standalone utility scripts (annotation runner, segmentation, dataset tools).
+
+Important:
+- new_classes.txt is used to initialize output_annotation/classes.txt (first run).
+
+--------------------------------------------------
+4) MODELS FOR AUTO-ANNOTATION
+--------------------------------------------------
+Place at least one detection model in automatic_annotation/ root with one of these names:
+
+- yolo12s.pt
+- yolo11n.pt
+- best.pt
+- yolo12m.pt
+
+The auto-annotation script tries these in this order and loads the first one found.
+
+Recommended minimal setup:
+- automatic_annotation/yolo12s.pt
+
+Tool path note:
+- Auto-annotation utility script is now at:
+  - automatic_annotation/tools/auto_annotation_runner.py
+
+--------------------------------------------------
+5) REQUIRED FOLDERS (MODEL COMPARISON)
+--------------------------------------------------
+Inside automatic_annotation/Model_Compare/, ensure:
+
+- ground_truth/
+  Contains evaluation images and matching YOLO txt labels.
+  Example:
+  - frame001.jpg
+  - frame001.txt
+
+- ground_truth/class/
+  Must contain:
+  - classes.txt
+
+- model/
+  Baseline/older model versions for evaluation page.
+
+- new_model/
+  Latest candidate model(s). App picks latest by modified time.
+
+- yolo model/
+  YOLO baseline model(s) used by Filter tab comparison.
+
+- output/
+  Auto-created; stores visualized comparison outputs.
+
+- metrics.csv
+  Auto-created/updated; stores run history and trends.
+
+--------------------------------------------------
+6) MODELS FOR FILTER TAB (IMPORTANT)
+--------------------------------------------------
+To use Annotate -> Filter:
+
+1. Put your latest custom model in:
+   automatic_annotation/Model_Compare/new_model/
+
+2. Put YOLO baseline model in:
+   automatic_annotation/Model_Compare/yolo model/
+
+Filter tab behavior:
+- compares latest custom model vs selected YOLO model
+- splits frames into two sets:
+  - poor frames: model is worse than YOLO
+  - other frames: same/better
+- default output paths:
+   - automatic_annotation/output_annotation/filtered_poor/
+   - automatic_annotation/output_annotation/filtered_other/
+
+--------------------------------------------------
+7) OPTIONAL FOLDERS FOR PERFORMANCE_TESTING
+--------------------------------------------------
+If running scripts under performance_testing/ manually, ensure that script-specific model/data paths exist there.
+Main app does not require performance_testing datasets unless you run those scripts directly.
+
+--------------------------------------------------
+8) FIRST RUN CHECKLIST
+--------------------------------------------------
+Before starting app, verify:
+
+[ ] venv activated
+[ ] requirements installed
+[ ] automatic_annotation/class/new_classes.txt exists
+[ ] at least one auto-annotation model exists in automatic_annotation/
+[ ] Model_Compare/new_model has your latest model
+[ ] Model_Compare/yolo model has YOLO baseline model
+[ ] Model_Compare/ground_truth has image+txt pairs
+[ ] Model_Compare/ground_truth/class/classes.txt exists
+
+--------------------------------------------------
+9) RUN THE APP
+--------------------------------------------------
+From automatic_annotation/:
+
+streamlit run streamlit_app.py
+
+Open browser URL shown in terminal (usually http://localhost:8501).
+
+Large video split helper:
+- python tools/segment_video.py large_video.mp4 ./segmented_videos 200
+
+--------------------------------------------------
+10) COMMON ISSUES
+--------------------------------------------------
+1. "No model found" in Filter tab:
+   - Check .pt files in:
+     - Model_Compare/new_model
+     - Model_Compare/yolo model
+
+2. Auto-annotation runs but no labels:
+   - Check class mapping between class/old_classes.txt and class/new_classes.txt
+   - Ensure model actually detects classes present in old_classes.txt
+
+3. Comparison metrics empty:
+   - Ensure ground_truth images have matching .txt labels
+   - Ensure classes.txt exists in ground_truth/class/
+
+4. Import errors in editor:
+   - Activate venv and reinstall requirements.
+
+--------------------------------------------------
+11) MODULAR CODE STRUCTURE (REPLACEABLE SEGMENTS)
+--------------------------------------------------
+The project now includes modular utilities under:
+
+- automatic_annotation/core/class_manager.py
+  - classes.txt bootstrap/read/write
+
+- automatic_annotation/core/gallery_utils.py
+  - image listing, sorting, preview loading, annotation box drawing
+
+- automatic_annotation/core/comparison_metrics.py
+  - YOLO txt parsing, GT-vs-pred matching, TP/FP/FN metrics, F1 helpers
+
+How to replace segments safely:
+- Keep function names/signatures used by streamlit_app.py.
+- Implement your own logic in these core modules.
+- UI pages remain stable as long as module API stays same.
+
+This allows changing metric strategies, gallery behavior, or class bootstrap logic
+without rewriting full Streamlit page code.
+
+--------------------------------------------------
+12) RESTRUCTURE SUMMARY
+--------------------------------------------------
+Moved utility scripts into `automatic_annotation/tools/`:
+- auto_annotation.py -> tools/auto_annotation_runner.py
+- segment_video.py -> tools/segment_video.py
+- write_frames.py -> tools/write_frames.py
+- create_dataset.py -> tools/create_dataset.py
+- analyze_dataset.py -> tools/analyze_dataset.py
+
+Removed safe unnecessary artifacts:
+- automatic_annotation/__pycache__/
+- automatic_annotation/.DS_Store
+- automatic_annotation/sample.jpeg
+- automatic_annotation/class_counts.txt
+- automatic_annotation/Model_Compare/test_metrics.py

@@ -27,6 +27,9 @@ from data_augmentation import (
     extract_frames_every,
     augment_images_in_dir,
 )
+from core import class_manager as class_utils
+from core import gallery_utils as gallery_utils
+from core import comparison_metrics as cmp_utils
 
 APP_DIR = Path(__file__).resolve().parent
 BASE_DIR = APP_DIR
@@ -55,6 +58,42 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 
+:root {
+    --bg-0: #070b14;
+    --bg-1: #0b1220;
+    --bg-2: #121a30;
+    --glass-1: rgba(20, 29, 48, 0.72);
+    --glass-2: rgba(10, 16, 30, 0.65);
+    --line-soft: rgba(148, 163, 184, 0.22);
+    --line-strong: rgba(34, 211, 238, 0.45);
+    --accent-cyan: #22d3ee;
+    --accent-blue: #3b82f6;
+    --accent-magenta: #ec4899;
+    --text-main: #e7edf8;
+    --text-soft: #a4b3cc;
+}
+
+@keyframes ambientShift {
+    0% { transform: translate3d(-4%, -2%, 0) scale(1); }
+    50% { transform: translate3d(3%, 2%, 0) scale(1.04); }
+    100% { transform: translate3d(-4%, -2%, 0) scale(1); }
+}
+
+@keyframes glowPulse {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+}
+
+@keyframes riseIn {
+    from { opacity: 0; transform: translateY(16px) scale(0.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes subtleSheen {
+    from { transform: translateX(-140%); }
+    to { transform: translateX(180%); }
+}
+
 /* ===== GLOBAL RESET & BASE ===== */
 *, *::before, *::after {
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -68,8 +107,38 @@ st.markdown("""
         radial-gradient(ellipse 100% 60% at 50% -20%, rgba(6, 182, 212, 0.15) 0%, transparent 50%),
         radial-gradient(ellipse 80% 50% at 100% 50%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
         radial-gradient(ellipse 80% 50% at 0% 100%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
-        linear-gradient(135deg, #0f172a 0%, #1a1a2e 50%, #16213e 100%);
+        linear-gradient(135deg, var(--bg-0) 0%, var(--bg-1) 46%, var(--bg-2) 100%);
     min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.stApp::before,
+.stApp::after {
+    content: '';
+    position: fixed;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 50%;
+    filter: blur(48px);
+    animation: ambientShift 18s ease-in-out infinite;
+}
+
+.stApp::before {
+    width: 38vw;
+    height: 38vw;
+    left: -10vw;
+    top: 12vh;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.24), rgba(34, 211, 238, 0));
+}
+
+.stApp::after {
+    width: 34vw;
+    height: 34vw;
+    right: -8vw;
+    bottom: 10vh;
+    background: radial-gradient(circle, rgba(236, 72, 153, 0.18), rgba(236, 72, 153, 0));
+    animation-duration: 24s;
 }
 
 /* ===== MAIN CONTAINER ===== */
@@ -77,6 +146,8 @@ st.markdown("""
     max-width: 1280px;
     padding: 2.5rem 1.5rem 4rem 1.5rem;
     margin-top: 0;
+    position: relative;
+    z-index: 1;
 }
 
 /* ===== MODERN HERO HEADER ===== */
@@ -94,6 +165,7 @@ st.markdown("""
         0 20px 40px -10px rgba(139, 92, 246, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: riseIn 0.7s ease-out both;
 }
 
 .hero-header::before {
@@ -106,6 +178,15 @@ st.markdown("""
     background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
     border-radius: 50%;
     z-index: 0;
+}
+
+.hero-header::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 15%, rgba(255,255,255,0.2) 40%, transparent 60%);
+    transform: translateX(-150%);
+    animation: subtleSheen 5.5s linear infinite;
 }
 
 .hero-header > * {
@@ -177,7 +258,8 @@ st.markdown("""
         0 0 40px rgba(6, 182, 212, 0.05),
         inset 0 1px 0 rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(10px);
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: riseIn 0.55s ease-out both;
 }
 
 .section-card:hover {
@@ -186,7 +268,20 @@ st.markdown("""
         0 20px 60px rgba(0, 0, 0, 0.4),
         0 0 80px rgba(6, 182, 212, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.12);
-    transform: translateY(-2px);
+    transform: translateY(-4px) scale(1.004);
+}
+
+.section-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    border: 1px solid transparent;
+    background: linear-gradient(140deg, rgba(34, 211, 238, 0.22), transparent 35%, rgba(236, 72, 153, 0.12)) border-box;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
 }
 
 .section-header {
@@ -209,6 +304,7 @@ st.markdown("""
     font-size: 1.5rem;
     box-shadow: 0 8px 24px rgba(6, 182, 212, 0.4);
     flex-shrink: 0;
+    animation: glowPulse 3.2s ease-in-out infinite;
 }
 
 .section-title {
@@ -255,7 +351,7 @@ st.markdown("""
     padding: 8px;
     border-radius: 16px;
     border: 1px solid rgba(148, 163, 184, 0.1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
     backdrop-filter: blur(10px);
 }
 
@@ -268,7 +364,7 @@ st.markdown("""
     font-weight: 700;
     font-size: 0.9rem;
     border: none;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .stTabs [data-baseweb="tab"]:hover {
@@ -281,7 +377,8 @@ st.markdown("""
     background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%) !important;
     color: #ffffff !important;
     font-weight: 800;
-    box-shadow: 0 8px 24px rgba(6, 182, 212, 0.4);
+    box-shadow: 0 10px 30px rgba(6, 182, 212, 0.45);
+    transform: translateY(-1px);
 }
 
 .stTabs [data-baseweb="tab"][aria-selected="true"] p,
@@ -307,17 +404,37 @@ st.markdown("""
     box-shadow: 
         0 0 0 1px rgba(255, 255, 255, 0.1),
         0 8px 24px rgba(6, 182, 212, 0.35);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
     text-shadow: 0 1px 2px rgba(0,0,0,0.2);
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
 }
 
 .stButton > button:hover {
-    transform: translateY(-3px);
+    transform: translateY(-3px) scale(1.01);
     color: #ffffff !important;
     box-shadow: 
         0 0 0 1px rgba(255, 255, 255, 0.2),
         0 12px 32px rgba(6, 182, 212, 0.45);
+}
+
+.stButton > button::after {
+    content: '';
+    position: absolute;
+    top: -150%;
+    left: -20%;
+    width: 40%;
+    height: 400%;
+    transform: rotate(18deg);
+    background: linear-gradient(180deg, transparent, rgba(255,255,255,0.35), transparent);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.stButton > button:hover::after {
+    opacity: 1;
+    animation: subtleSheen 1.3s ease-out;
 }
 
 .stButton > button:active {
@@ -341,7 +458,7 @@ st.markdown("""
     color: #f8fafc !important;
     padding: 0.85rem 1.1rem;
     font-size: 0.95rem;
-    transition: all 0.25s ease;
+    transition: all 0.28s ease;
     backdrop-filter: blur(5px);
 }
 
@@ -350,6 +467,12 @@ st.markdown("""
     border-color: rgba(6, 182, 212, 0.5) !important;
     box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15) !important;
     background: rgba(15, 23, 42, 0.95) !important;
+}
+
+.stTextInput > div > div > input:hover,
+.stNumberInput > div > div > input:hover,
+.stSelectbox [data-baseweb="select"] > div:hover {
+    border-color: rgba(34, 211, 238, 0.32) !important;
 }
 
 /* ===== BUTTON STYLING ===== */
@@ -421,13 +544,13 @@ st.markdown("""
 
 /* ===== TYPOGRAPHY ===== */
 .stMarkdown, .stText, p, span, li {
-    color: #cbd5e1 !important;
+    color: var(--text-soft) !important;
     line-height: 1.7;
     font-size: 0.95rem;
 }
 
 h1, h2 {
-    color: #f8fafc !important;
+    color: var(--text-main) !important;
     font-weight: 800;
     letter-spacing: -0.02em;
 }
@@ -453,6 +576,7 @@ h4 {
     padding: 1.5rem;
     transition: all 0.3s ease;
     backdrop-filter: blur(5px);
+    animation: riseIn 0.5s ease-out both;
 }
 
 .stFileUploader:hover {
@@ -520,6 +644,24 @@ h4 {
     border-left: 4px solid #06b6d4;
     border-radius: 12px;
     padding: 1.2rem !important;
+}
+
+[data-testid="stDataFrame"],
+[data-testid="stTable"] {
+    background: linear-gradient(135deg, var(--glass-1) 0%, var(--glass-2) 100%) !important;
+    border: 1px solid var(--line-soft) !important;
+    border-radius: 14px !important;
+    overflow: hidden;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+}
+
+[data-testid="stDataFrame"] [role="row"],
+[data-testid="stTable"] [role="row"] {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+[data-testid="stMarkdownContainer"] ul li {
+    margin-bottom: 0.28rem;
 }
 
 .stWarning {
@@ -761,6 +903,48 @@ code {
     border-radius: 5px;
     font-size: 0.9rem;
     font-weight: 500;
+}
+
+/* ===== CHART TOOLTIP FIX (VEGA/ALTAIR) ===== */
+/* Prevent tooltip text from sticking/floating when chart hover ends. */
+#vg-tooltip-element,
+.vg-tooltip {
+    position: absolute !important;
+    z-index: 2147483647 !important;
+    pointer-events: none !important;
+    background: rgba(8, 12, 24, 0.96) !important;
+    border: 1px solid rgba(34, 211, 238, 0.35) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
+    color: #e7edf8 !important;
+    padding: 0.45rem 0.6rem !important;
+    max-width: 320px !important;
+    display: none !important;
+}
+
+#vg-tooltip-element.visible,
+.vg-tooltip.visible {
+    display: block !important;
+}
+
+#vg-tooltip-element table,
+.vg-tooltip table {
+    border-collapse: collapse !important;
+    margin: 0 !important;
+}
+
+#vg-tooltip-element td,
+.vg-tooltip td {
+    color: #dbe7fb !important;
+    font-size: 0.82rem !important;
+    padding: 0.12rem 0.4rem !important;
+    border: 0 !important;
+}
+
+/* Keep chart layers from clipping floating tooltips. */
+div[data-testid="stVegaLiteChart"],
+div[data-testid="stArrowVegaLiteChart"] {
+    overflow: visible !important;
 }
 
 /* ===== METRIC DISPLAY ===== */
@@ -1051,7 +1235,7 @@ div[data-testid="stRadio"]:has(input[name="nav_page"]) input:checked + div {
     border: 1.5px solid rgba(148, 163, 184, 0.2);
     border-radius: 18px;
     padding: 1rem;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: all 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
     overflow: hidden;
     backdrop-filter: blur(10px);
@@ -1060,7 +1244,7 @@ div[data-testid="stRadio"]:has(input[name="nav_page"]) input:checked + div {
 .gallery-image-wrapper:hover {
     border-color: rgba(6, 182, 212, 0.5);
     box-shadow: 0 12px 40px rgba(6, 182, 212, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    transform: translateY(-2px);
+    transform: translateY(-3px) scale(1.01);
 }
 
 .gallery-image-wrapper img {
@@ -1218,6 +1402,13 @@ div[data-testid="stRadio"]:has(input[name="nav_page"]) input:checked + div {
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5) !important;
 }
 
+/* Staggered reveal for stacked cards/metrics */
+[data-testid="stVerticalBlock"] > div:has(.section-card):nth-child(1) .section-card { animation-delay: 0.02s; }
+[data-testid="stVerticalBlock"] > div:has(.section-card):nth-child(2) .section-card { animation-delay: 0.06s; }
+[data-testid="stVerticalBlock"] > div:has(.section-card):nth-child(3) .section-card { animation-delay: 0.1s; }
+[data-testid="stVerticalBlock"] > div:has(.section-card):nth-child(4) .section-card { animation-delay: 0.14s; }
+[data-testid="stVerticalBlock"] [data-testid="stMetric"] { animation: riseIn 0.45s ease-out both; }
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
     .hero-title {
@@ -1230,6 +1421,22 @@ div[data-testid="stRadio"]:has(input[name="nav_page"]) input:checked + div {
     
     .hero-header {
         padding: 2rem 1.5rem;
+    }
+
+    .hero-badges {
+        gap: 0.45rem;
+        margin-top: 1.1rem;
+    }
+
+    .hero-badge {
+        font-size: 0.65rem;
+        padding: 0.45rem 0.75rem;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        height: 44px;
+        padding: 0 14px;
+        font-size: 0.8rem;
     }
 }
 </style>
@@ -1460,9 +1667,9 @@ if current_page == "Annotate":
         st.warning("""
         **⚠ Video Size Limit:** Videos must be under 200MB for upload.
         
-        **If your video is larger:** Use the `segment_video.py` tool to split it into 200MB chunks:
+        **If your video is larger:** Use the `tools/segment_video.py` tool to split it into 200MB chunks:
         ```
-        python segment_video.py large_video.mp4 ./segmented_videos 200
+        python tools/segment_video.py large_video.mp4 ./segmented_videos 200
         ```
         Then upload each segment separately. All segments will be extracted to the same output folder.
         """)
@@ -1544,7 +1751,16 @@ if current_page == "Annotate":
         yolo_candidates = list_yolo_models(filter_yolo_model_dir)
 
         source_filter_dir = st.text_input("Source frames folder", value=str(FRAMES_DIR), key="filter_source_folder")
-        destination_filter_dir = st.text_input("Destination folder", value=str(ANNOT_DIR), key="filter_destination_folder")
+        destination_filter_dir = st.text_input(
+            "Poor frames folder (custom model worse)",
+            value=str(ANNOT_DIR / "filtered_poor"),
+            key="filter_destination_folder",
+        )
+        other_destination_filter_dir = st.text_input(
+            "Other frames folder (same/better than YOLO)",
+            value=str(ANNOT_DIR / "filtered_other"),
+            key="filter_other_destination_folder",
+        )
 
         if latest_new_model:
             st.info(f"Latest new model: `{latest_new_model.name}`")
@@ -1612,6 +1828,8 @@ if current_page == "Annotate":
                             str(src_path),
                             "--destination-dir",
                             str(destination_filter_dir),
+                            "--other-destination-dir",
+                            str(other_destination_filter_dir),
                             "--conf-thresh",
                             str(conf_threshold_filter),
                             "--iou-thresh",
@@ -1645,15 +1863,19 @@ if current_page == "Annotate":
                             if proc.stdout:
                                 st.code(proc.stdout)
                         else:
-                            st.success("✓ Filtering completed. Destination now contains only poor-performing frames.")
+                            st.session_state["filter_poor_dir"] = summary.get("poor_destination_dir", destination_filter_dir)
+                            st.session_state["filter_other_dir"] = summary.get("other_destination_dir", other_destination_filter_dir)
+
+                            st.success("✓ Filtering completed. Frames were split into poor and other sets.")
                             metric_col1, metric_col2, metric_col3 = st.columns(3)
                             with metric_col1:
                                 st.metric("Total Images", int(summary.get("total_images", 0)))
                             with metric_col2:
-                                st.metric("Selected (Poor)", int(summary.get("selected_images", 0)))
+                                st.metric("Poor Frames", int(summary.get("poor_images", summary.get("selected_images", 0))))
                             with metric_col3:
-                                st.metric("Ignored", int(summary.get("ignored_images", 0)))
-                            st.caption(f"Saved to: {summary.get('destination_dir', destination_filter_dir)}")
+                                st.metric("Other Frames", int(summary.get("other_images", 0)))
+                            st.caption(f"Poor folder: {summary.get('poor_destination_dir', destination_filter_dir)}")
+                            st.caption(f"Other folder: {summary.get('other_destination_dir', other_destination_filter_dir)}")
 
     # TAB 3: AUGMENT
     with tabs[2]:
@@ -1750,31 +1972,48 @@ if current_page == "Annotate":
         </div>
         """, unsafe_allow_html=True)
         
-        gallery_dir = Path(st.session_state.get("frames_dir", str(FRAMES_DIR)))
+        default_frames_dir = str(Path(st.session_state.get("frames_dir", str(FRAMES_DIR))))
+        default_annot_dir = str(Path(st.session_state.get("annot_dir", str(ANNOT_DIR))))
+        default_filter_poor_dir = st.session_state.get("filter_poor_dir", str(ANNOT_DIR / "filtered_poor"))
+        default_filter_other_dir = st.session_state.get("filter_other_dir", str(ANNOT_DIR / "filtered_other"))
+
+        gallery_sources = {
+            "Frames (Upload/Augment)": default_frames_dir,
+            "Filtered - Poor": default_filter_poor_dir,
+            "Filtered - Other": default_filter_other_dir,
+            "Annotation Folder": default_annot_dir,
+            "Custom": default_frames_dir,
+        }
+        selected_gallery_source = st.selectbox(
+            "Choose folder to view",
+            options=list(gallery_sources.keys()),
+            key="gallery_source_choice",
+        )
+
+        if selected_gallery_source == "Custom":
+            gallery_dir_input = st.text_input(
+                "Custom gallery folder",
+                value=default_frames_dir,
+                key="gallery_custom_folder",
+            )
+        else:
+            gallery_dir_input = gallery_sources[selected_gallery_source]
+
+        gallery_dir = Path(gallery_dir_input)
+        st.caption(f"Viewing folder: `{gallery_dir}`")
         IMAGES_PER_PAGE = 12
         
         def natural_sort_key(path):
             """Sort file names naturally (e.g., frame2 before frame10)."""
-            import re
-            name = path.name
-            return [int(s) if s.isdigit() else s.lower() for s in re.split(r'(\d+)', name)]
+            return gallery_utils.natural_sort_key(path)
         
         def get_all_images_gallery(dir_path):
             """Collect all gallery images recursively from the selected frame directory."""
-            imgs = []
-            if dir_path.exists():
-                for root, _, files in os.walk(dir_path):
-                    for f in sorted(files):
-                        if f.lower().endswith((".jpg", ".jpeg", ".png", ".bmp")):
-                            imgs.append(Path(root) / f)
-            return sorted(imgs, key=natural_sort_key)
+            return gallery_utils.list_images_recursive(dir_path)
         
         def load_image_gallery(path):
             """Load one image as RGB PIL for Streamlit display."""
-            img = cv2.imread(str(path))
-            if img is None:
-                return None
-            return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+            return gallery_utils.load_image_pil_rgb(path)
         
         cols_per_row = st.selectbox("Grid columns", [2, 3, 4, 5], 1, key="gallery_cols_per_row")
         
@@ -1891,20 +2130,27 @@ if current_page == "Annotate":
         
         # Class Management
         st.markdown("#### Class Management")
-        CLASSES_TXT = Path(annot_dir_input) / "classes.txt"
+        annot_dir_path = Path(annot_dir_input)
+        annot_dir_path.mkdir(parents=True, exist_ok=True)
+        CLASSES_TXT = annot_dir_path / "classes.txt"
+        DEFAULT_NEW_CLASSES = BASE_DIR / "class" / "new_classes.txt"
+
+        # First-run bootstrap is delegated to a shared utility to keep this UI replaceable.
+        classes_existed = CLASSES_TXT.exists()
+        try:
+            class_utils.ensure_classes_file(annot_dir_path, DEFAULT_NEW_CLASSES)
+            if not classes_existed and CLASSES_TXT.exists():
+                st.info(f"Initialized `{CLASSES_TXT.name}` from `{DEFAULT_NEW_CLASSES}`")
+        except Exception as bootstrap_err:
+            st.warning(f"Could not initialize classes file automatically: {bootstrap_err}")
         
         def load_classes():
             """Load currently configured class list from classes.txt."""
-            if CLASSES_TXT.exists():
-                with open(CLASSES_TXT) as f:
-                    return [line.strip() for line in f if line.strip()]
-            return []
+            return class_utils.load_classes_file(CLASSES_TXT)
         
         def save_classes(classes_list):
             """Persist class list to classes.txt used by auto-annotation."""
-            CLASSES_TXT.parent.mkdir(parents=True, exist_ok=True)
-            with open(CLASSES_TXT, "w") as f:
-                f.write("\n".join(classes_list) + "\n" if classes_list else "")
+            class_utils.save_classes_file(CLASSES_TXT, classes_list)
         
         current_classes = load_classes()
         
@@ -1933,6 +2179,15 @@ if current_page == "Annotate":
         if st.button("Run Auto-Annotation", type="primary"):
             frames_dir = Path(st.session_state.get("frames_dir", str(FRAMES_DIR)))
             annot_dir = Path(annot_dir_input)
+            annot_dir.mkdir(parents=True, exist_ok=True)
+
+            # Safety net before annotation: ensure classes.txt exists in destination.
+            classes_file = annot_dir / "classes.txt"
+            if not classes_file.exists() and DEFAULT_NEW_CLASSES.exists():
+                try:
+                    class_utils.ensure_classes_file(annot_dir, DEFAULT_NEW_CLASSES)
+                except Exception as copy_err:
+                    st.warning(f"Could not create classes.txt from new_classes.txt: {copy_err}")
             
             def list_images(dir_path, limit=30):
                 """Quickly sample image files to validate frame availability."""
@@ -1952,7 +2207,7 @@ if current_page == "Annotate":
                 st.info(f"Found {len(frames_list)} frames. Starting annotation...")
                 with st.spinner("Running YOLO inference..."):
                     proc = subprocess.run(
-                        [sys.executable, "auto_annotation.py", "--frames-dir", str(frames_dir), "--annot-dir", str(annot_dir)],
+                        [sys.executable, "tools/auto_annotation_runner.py", "--frames-dir", str(frames_dir), "--annot-dir", str(annot_dir)],
                         cwd=str(BASE_DIR),
                         capture_output=True,
                         text=True,
@@ -1988,41 +2243,15 @@ if current_page == "Annotate":
         
         def get_all_annotated_images_ann(dir_path):
             """Collect all annotated images recursively for review gallery."""
-            imgs = []
-            if dir_path.exists():
-                for root, _, files in os.walk(dir_path):
-                    for f in sorted(files):
-                        if f.lower().endswith((".jpg", ".jpeg", ".png", ".bmp")):
-                            imgs.append(Path(root) / f)
-            return sorted(imgs, key=natural_sort_key)
+            return gallery_utils.list_images_recursive(dir_path)
         
         def load_image_ann(path):
             """Load one annotated image as RGB PIL."""
-            img = cv2.imread(str(path))
-            if img is None:
-                return None
-            return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+            return gallery_utils.load_image_pil_rgb(path)
         
         def draw_boxes_ann(img_pil, txt_path):
             """Render YOLO txt boxes on top of a preview image."""
-            img = np.array(img_pil).copy()
-            h, w = img.shape[:2]
-            if txt_path.exists():
-                try:
-                    with open(txt_path) as f:
-                        lines = [ln.strip() for ln in f if ln.strip()]
-                    for ln in lines:
-                        parts = ln.split()
-                        if len(parts) == 5:
-                            _, cx, cy, bw, bh = map(float, parts)
-                            x = int((cx - bw / 2) * w)
-                            y = int((cy - bh / 2) * h)
-                            x2 = int((cx + bw / 2) * w)
-                            y2 = int((cy + bh / 2) * h)
-                            cv2.rectangle(img, (x, y), (x2, y2), (0, 255, 0), 2)
-                except:
-                    pass
-            return Image.fromarray(img)
+            return gallery_utils.draw_yolo_boxes_from_txt(img_pil, txt_path)
         
         cols_per_row = st.selectbox("Grid columns", [2, 3, 4, 5], 1, key="annotated_cols_per_row")
         
@@ -2201,142 +2430,17 @@ elif current_page == "Model Comparison":
 
     def metric_safe_label(label):
         """Normalize a class label into a metrics-friendly key suffix."""
-        return str(label).strip().lower().replace(" ", "_").replace("-", "_")
+        return cmp_utils.metric_safe_label(label)
     
     def parse_yolo_annotation(txt_path):
         """Parse YOLO txt format: class_id x_center y_center width height."""
-        boxes = []
-        if not txt_path.exists():
-            return boxes
-        try:
-            with open(txt_path) as f:
-                for line in f:
-                    if line.strip():
-                        parts = [float(x) for x in line.strip().split()]
-                        if len(parts) >= 5:
-                            boxes.append((
-                                int(parts[0]),
-                                parts[1],
-                                parts[2],
-                                parts[3],
-                                parts[4]
-                            ))
-        except:
-            pass
-        return boxes
+        return cmp_utils.parse_yolo_annotation(Path(txt_path))
     
-    def compare_annotations(gt_txt, pred_txt, img_shape):
+    def compare_annotations(gt_txt, pred_txt, img_shape, iou_threshold=0.5):
         """Compare GT and predictions and compute match/FP/FN statistics."""
-        gt_boxes = parse_yolo_annotation(gt_txt)
-        pred_boxes = parse_yolo_annotation(pred_txt)
-        
-        # Convert normalized coordinates to pixel coordinates
-        w, h = img_shape
-        gt_pixel_boxes = []
-        for box in gt_boxes:
-            class_id, x_c, y_c, bw, bh = box
-            x1 = max(0, (x_c - bw/2) * w)
-            y1 = max(0, (y_c - bh/2) * h)
-            x2 = min(w, (x_c + bw/2) * w)
-            y2 = min(h, (y_c + bh/2) * h)
-            gt_pixel_boxes.append((class_id, x1, y1, x2, y2))
-        
-        pred_pixel_boxes = []
-        for box in pred_boxes:
-            class_id, x_c, y_c, bw, bh = box
-            x1 = max(0, (x_c - bw/2) * w)
-            y1 = max(0, (y_c - bh/2) * h)
-            x2 = min(w, (x_c + bw/2) * w)
-            y2 = min(h, (y_c + bh/2) * h)
-            pred_pixel_boxes.append((class_id, x1, y1, x2, y2))
-        
-        # Calculate IoU
-        def calculate_iou(box1, box2):
-            """Calculate IoU between two class-aware pixel-coordinate boxes."""
-            _, x1_1, y1_1, x2_1, y2_1 = box1
-            _, x1_2, y1_2, x2_2, y2_2 = box2
-            
-            # Intersection
-            xi1 = max(x1_1, x1_2)
-            yi1 = max(y1_1, y1_2)
-            xi2 = min(x2_1, x2_2)
-            yi2 = min(y2_1, y2_2)
-            
-            inter_area = max(0, xi2 - xi1) * max(0, yi2 - yi1)
-            
-            # Union
-            box1_area = (x2_1 - x1_1) * (y2_1 - y1_1)
-            box2_area = (x2_2 - x1_2) * (y2_2 - y1_2)
-            union_area = box1_area + box2_area - inter_area
-            
-            return inter_area / union_area if union_area > 0 else 0
-        
-        # Match boxes with IoU threshold 0.5
-        iou_threshold = 0.5
-        matched_pairs = []
-        used_pred = set()
-        
-        for gt_box in gt_pixel_boxes:
-            best_iou = 0
-            best_pred_idx = -1
-            
-            for pred_idx, pred_box in enumerate(pred_pixel_boxes):
-                if pred_idx in used_pred:
-                    continue
-                
-                # Only match boxes of same class
-                if gt_box[0] != pred_box[0]:
-                    continue
-                
-                iou = calculate_iou(gt_box, pred_box)
-                if iou > best_iou and iou >= iou_threshold:
-                    best_iou = iou
-                    best_pred_idx = pred_idx
-            
-            if best_pred_idx >= 0:
-                matched_pairs.append((gt_box, pred_pixel_boxes[best_pred_idx]))
-                used_pred.add(best_pred_idx)
-        
-        per_class = {}
-        for cls, *_ in gt_pixel_boxes:
-            per_class.setdefault(cls, {'tp': 0, 'fp': 0, 'fn': 0})
-        for cls, *_ in pred_pixel_boxes:
-            per_class.setdefault(cls, {'tp': 0, 'fp': 0, 'fn': 0})
-
-        matched_pred_indices = set()
-        matched_gt_indices = set()
-        for gt_box, pred_box in matched_pairs:
-            gt_idx = gt_pixel_boxes.index(gt_box)
-            pred_idx = pred_pixel_boxes.index(pred_box)
-            matched_gt_indices.add(gt_idx)
-            matched_pred_indices.add(pred_idx)
-            cls_id = gt_box[0]
-            per_class.setdefault(cls_id, {'tp': 0, 'fp': 0, 'fn': 0})
-            per_class[cls_id]['tp'] += 1
-
-        for pred_idx, pred_box in enumerate(pred_pixel_boxes):
-            if pred_idx not in matched_pred_indices:
-                cls_id = pred_box[0]
-                per_class.setdefault(cls_id, {'tp': 0, 'fp': 0, 'fn': 0})
-                per_class[cls_id]['fp'] += 1
-
-        for gt_idx, gt_box in enumerate(gt_pixel_boxes):
-            if gt_idx not in matched_gt_indices:
-                cls_id = gt_box[0]
-                per_class.setdefault(cls_id, {'tp': 0, 'fp': 0, 'fn': 0})
-                per_class[cls_id]['fn'] += 1
-
-        metrics = {
-            'gt_count': len(gt_boxes),
-            'pred_count': len(pred_boxes),
-            'matches': len(matched_pairs),
-            'false_positives': len(pred_boxes) - len(matched_pairs),
-            'false_negatives': len(gt_boxes) - len(matched_pairs),
-            'per_class': per_class
-        }
-        return metrics
+        return cmp_utils.compare_annotations(Path(gt_txt), Path(pred_txt), img_shape, iou_threshold=iou_threshold)
     
-    def run_model_comparison(model_name):
+    def run_model_comparison(model_name, conf_threshold=0.5, iou_threshold=0.5):
         """Run full model evaluation against comparison ground-truth dataset."""
         from ultralytics import YOLO
         
@@ -2349,6 +2453,8 @@ elif current_page == "Model Comparison":
             'matched_boxes': 0,
             'false_positives': 0,
             'false_negatives': 0,
+            'eval_conf_threshold': float(conf_threshold),
+            'eval_iou_threshold': float(iou_threshold),
             'timestamp': datetime.now().isoformat()
         }
         
@@ -2395,7 +2501,7 @@ elif current_page == "Model Comparison":
             
             # Run inference on image
             try:
-                results_yolo = model(str(gt_img), conf=0.5, verbose=False)
+                results_yolo = model(str(gt_img), conf=float(conf_threshold), verbose=False)
                 
                 # Save predictions to txt file
                 pred_txt = pred_output_dir / f"{gt_img.stem}.txt"
@@ -2422,7 +2528,7 @@ elif current_page == "Model Comparison":
                 
                 # Compare annotations
                 h, w = results_yolo[0].orig_shape if len(results_yolo) > 0 else (0, 0)
-                metrics = compare_annotations(gt_txt, pred_txt, (w, h))
+                metrics = compare_annotations(gt_txt, pred_txt, (w, h), iou_threshold=float(iou_threshold))
                 total_matches += metrics['matches']
                 total_fp += metrics['false_positives']
                 total_fn += metrics['false_negatives']
@@ -2504,38 +2610,17 @@ elif current_page == "Model Comparison":
         rec_col = 'overall_recall' if 'overall_recall' in df.columns else 'recall'
         return model_col, date_col, prec_col, rec_col
 
+    def build_f1_series(df, prec_col, rec_col):
+        """Build robust F1 series from available columns with numeric coercion."""
+        return cmp_utils.build_f1_series(df, prec_col, rec_col)
+
+    def row_f1_value(row, prec_col, rec_col):
+        """Return F1 for one row using stored value when valid, else derive from P/R."""
+        return cmp_utils.row_f1_value(row, prec_col, rec_col)
+
     def build_per_class_table(metrics_row):
         """Build display-ready per-class precision/recall/F1 table from one run."""
-        class_rows = []
-        for col in metrics_row.index:
-            if not col.startswith('precision_'):
-                continue
-            cls = col.replace('precision_', '')
-            rec_col = f"recall_{cls}"
-            if rec_col not in metrics_row.index:
-                continue
-
-            precision_val = metrics_row.get(col, np.nan)
-            recall_val = metrics_row.get(rec_col, np.nan)
-
-            if pd.isna(precision_val) and pd.isna(recall_val):
-                continue
-
-            precision_num = float(precision_val) if pd.notna(precision_val) else 0.0
-            recall_num = float(recall_val) if pd.notna(recall_val) else 0.0
-            f1_num = (2 * precision_num * recall_num / (precision_num + recall_num)) if (precision_num + recall_num) > 0 else 0.0
-
-            class_rows.append({
-                'Class': cls.replace('_', ' ').title(),
-                'Precision': precision_num,
-                'Recall': recall_num,
-                'F1': f1_num
-            })
-
-        if not class_rows:
-            return pd.DataFrame()
-
-        return pd.DataFrame(class_rows).sort_values('F1', ascending=False).reset_index(drop=True)
+        return cmp_utils.build_per_class_table(metrics_row)
     
     # Get available models
     available_models = get_available_models()
@@ -2556,14 +2641,22 @@ elif current_page == "Model Comparison":
     """, unsafe_allow_html=True)
 
     if available_models:
-        col_eval_1, col_eval_2 = st.columns([2, 1])
+        col_eval_1, col_eval_2, col_eval_3, col_eval_4 = st.columns([2, 1, 1, 1])
         with col_eval_1:
             selected_model = st.selectbox("Model to evaluate", available_models, key="model_eval_select")
         with col_eval_2:
+            eval_conf_threshold = st.slider("Eval conf", 0.05, 0.95, 0.50, 0.05, key="model_eval_conf")
+        with col_eval_3:
+            eval_iou_threshold = st.slider("Eval IoU", 0.10, 0.95, 0.50, 0.05, key="model_eval_iou")
+        with col_eval_4:
             if st.button("Run Evaluation", type="primary", use_container_width=True):
                 if selected_model:
                     with st.spinner(f"Comparing {selected_model} with ground truth..."):
-                        results = run_model_comparison(selected_model)
+                        results = run_model_comparison(
+                            selected_model,
+                            conf_threshold=eval_conf_threshold,
+                            iou_threshold=eval_iou_threshold,
+                        )
                         total_activity = results['matched_boxes'] + results['false_positives'] + results['false_negatives']
                         if results.get('total_frames', 0) == 0:
                             st.error("No frames were processed. Metrics entry was not saved.")
@@ -2700,18 +2793,31 @@ elif current_page == "Model Comparison":
         
         if len(metrics_df_work) > 0:
             trend_df = metrics_df_work[[date_col, model_col, prec_col, rec_col]].copy()
+            trend_df['f1_score'] = build_f1_series(metrics_df_work, prec_col, rec_col)
             trend_df = trend_df.dropna(subset=[date_col]).sort_values(date_col)
             if len(trend_df) > 0:
                 st.markdown("#### Precision / Recall Trend")
                 trend_metric = st.segmented_control(
                     "Trend metric",
-                    ["Precision", "Recall"],
+                    ["Precision", "Recall", "F1"],
                     key="history_trend_metric",
                     default="Precision"
                 )
-                value_col = prec_col if trend_metric == "Precision" else rec_col
+                if trend_metric == "Precision":
+                    value_col = prec_col
+                elif trend_metric == "Recall":
+                    value_col = rec_col
+                else:
+                    value_col = 'f1_score'
+
                 pivot_data = trend_df.pivot_table(values=value_col, index=date_col, columns=model_col)
                 st.line_chart(pivot_data)
+
+                smooth_enabled = st.checkbox("Show smoothed trend", value=True, key="history_smooth_enabled")
+                if smooth_enabled:
+                    smooth_window = st.slider("Smoothing window (runs)", 2, 10, 3, key="history_smooth_window")
+                    smooth_data = pivot_data.rolling(window=smooth_window, min_periods=1).mean()
+                    st.area_chart(smooth_data)
 
             st.markdown("#### Detailed Runs")
             st.dataframe(
@@ -2747,10 +2853,7 @@ elif current_page == "Model Comparison":
 
             if len(latest_metrics) > 0:
                 latest_metrics = latest_metrics.copy()
-                latest_metrics['F1-Score'] = latest_metrics.apply(
-                    lambda x: x.get('f1_score', 2 * (x.get(prec_col, 0) * x.get(rec_col, 0)) / (x.get(prec_col, 0) + x.get(rec_col, 0)) if (x.get(prec_col, 0) + x.get(rec_col, 0)) > 0 else 0),
-                    axis=1
-                )
+                latest_metrics['F1-Score'] = latest_metrics.apply(lambda row: row_f1_value(row, prec_col, rec_col), axis=1)
 
                 kpi_df = latest_metrics[[model_col, prec_col, rec_col, 'F1-Score']].copy()
                 kpi_df.rename(columns={model_col: 'Model', prec_col: 'Precision', rec_col: 'Recall'}, inplace=True)
@@ -2841,6 +2944,7 @@ elif current_page == "Model Comparison":
             history_df = metrics_df.copy()
             history_df[date_col] = pd.to_datetime(history_df[date_col], errors='coerce')
             history_df = history_df.dropna(subset=[date_col]).sort_values(date_col)
+            history_df['f1_score'] = build_f1_series(history_df, prec_col, rec_col)
 
             model_opts = sorted(history_df[model_col].dropna().unique().tolist())
             selected_history_models = st.multiselect(
@@ -2855,16 +2959,23 @@ elif current_page == "Model Comparison":
 
             metric_choice = st.segmented_control(
                 "Metric",
-                ["Precision", "Recall"],
+                ["Precision", "Recall", "F1"],
                 key="model_compare_history_metric",
                 default="Precision"
             )
 
-            metric_col = prec_col if metric_choice == "Precision" else rec_col
+            if metric_choice == "Precision":
+                metric_col = prec_col
+            elif metric_choice == "Recall":
+                metric_col = rec_col
+            else:
+                metric_col = 'f1_score'
+
             chart_df = history_df.pivot_table(values=metric_col, index=date_col, columns=model_col)
             if len(chart_df) > 0:
                 st.line_chart(chart_df)
-                st.area_chart(chart_df)
+                smooth_window_adv = st.slider("Smoothing window (runs)", 2, 10, 3, key="model_compare_history_smooth_window")
+                st.area_chart(chart_df.rolling(window=smooth_window_adv, min_periods=1).mean())
 
             st.dataframe(
                 history_df.sort_values(date_col, ascending=False),
@@ -2886,10 +2997,7 @@ elif current_page == "Model Comparison":
 
             if len(latest_metrics) > 0:
                 latest_metrics = latest_metrics.copy()
-                latest_metrics['F1-Score'] = latest_metrics.apply(
-                    lambda x: x.get('f1_score', 2 * (x.get(prec_col, 0) * x.get(rec_col, 0)) / (x.get(prec_col, 0) + x.get(rec_col, 0)) if (x.get(prec_col, 0) + x.get(rec_col, 0)) > 0 else 0),
-                    axis=1
-                )
+                latest_metrics['F1-Score'] = latest_metrics.apply(lambda row: row_f1_value(row, prec_col, rec_col), axis=1)
 
                 overview = latest_metrics[[model_col, prec_col, rec_col, 'F1-Score']].set_index(model_col)
                 overview.columns = ['Precision', 'Recall', 'F1-Score']

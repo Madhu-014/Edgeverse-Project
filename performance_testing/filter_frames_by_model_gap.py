@@ -153,38 +153,74 @@ def _iter_image_files(folder_path):
     return files
 
 
+def _iter_label_files(folder_path):
+    """List top-level YOLO label txt files in sorted order."""
+    folder = Path(folder_path)
+    if not folder.exists():
+        return []
+
+    return [
+        path
+        for path in sorted(folder.iterdir())
+        if path.is_file() and path.suffix.lower() == ".txt"
+    ]
+
+
+def _copy_image_and_label(image_path: Path, destination_path: Path):
+    """Copy one image and its same-stem txt label (if present) into destination."""
+    shutil.copy2(image_path, destination_path / image_path.name)
+
+    label_path = image_path.with_suffix(".txt")
+    if label_path.exists() and label_path.is_file():
+        shutil.copy2(label_path, destination_path / label_path.name)
+
+
 def filter_poor_frames(
     new_model_path,
     yolo_model_path,
     source_dir,
     destination_dir,
+    other_destination_dir=None,
     conf_thresh=0.25,
     iou_thresh=0.4,
     max_allowed_box_diff=1,
     clear_destination=True,
 ):
-    """Copy only poor-performing frames from source to destination.
+    """Split frames into poor and non-poor sets using model-gap comparison.
 
-    A frame is copied when `custom_model_is_worse(...)` returns True.
-    Destination can be cleared first so it contains only selected frames.
+    - Poor frames are copied to `destination_dir`.
+    - Frames where custom is same/better are copied to `other_destination_dir` when provided.
+    - Matching `.txt` labels (same filename stem) are copied with each frame when present.
+    - Destination folders can be cleared first for clean output.
     """
     source_path = Path(source_dir)
     destination_path = Path(destination_dir)
+    other_destination_path = Path(other_destination_dir) if other_destination_dir else None
 
     if not source_path.exists():
         raise FileNotFoundError(f"Source directory not found: {source_path}")
 
     destination_path.mkdir(parents=True, exist_ok=True)
+    if other_destination_path:
+        other_destination_path.mkdir(parents=True, exist_ok=True)
 
     if clear_destination:
         for file_path in _iter_image_files(destination_path):
             file_path.unlink(missing_ok=True)
+        for file_path in _iter_label_files(destination_path):
+            file_path.unlink(missing_ok=True)
+        if other_destination_path:
+            for file_path in _iter_image_files(other_destination_path):
+                file_path.unlink(missing_ok=True)
+            for file_path in _iter_label_files(other_destination_path):
+                file_path.unlink(missing_ok=True)
 
     custom_model = YOLO(str(new_model_path))
     yolo_model = YOLO(str(yolo_model_path))
 
     image_files = _iter_image_files(source_path)
-    selected_count = 0
+    poor_count = 0
+    other_count = 0
 
     for image_path in image_files:
         frame = cv2.imread(str(image_path))
@@ -205,15 +241,22 @@ def filter_poor_frames(
         )
 
         if is_worse:
-            shutil.copy2(image_path, destination_path / image_path.name)
-            selected_count += 1
+            _copy_image_and_label(image_path, destination_path)
+            poor_count += 1
+        elif other_destination_path:
+            _copy_image_and_label(image_path, other_destination_path)
+            other_count += 1
 
     return {
         "source_dir": str(source_path),
         "destination_dir": str(destination_path),
+        "poor_destination_dir": str(destination_path),
+        "other_destination_dir": str(other_destination_path) if other_destination_path else "",
         "total_images": len(image_files),
-        "selected_images": selected_count,
-        "ignored_images": max(0, len(image_files) - selected_count),
+        "selected_images": poor_count,
+        "poor_images": poor_count,
+        "other_images": other_count,
+        "ignored_images": max(0, len(image_files) - poor_count),
         "new_model_path": str(new_model_path),
         "yolo_model_path": str(yolo_model_path),
     }
@@ -332,6 +375,7 @@ def main():
     parser.add_argument("--yolo-model", default="")
     parser.add_argument("--source-dir", default="")
     parser.add_argument("--destination-dir", default="")
+    parser.add_argument("--other-destination-dir", default="")
 
     parser.add_argument("--iou-thresh", type=float, default=0.5)
     parser.add_argument("--conf-thresh", type=float, default=0.25)
@@ -361,6 +405,7 @@ def main():
         yolo_model_path=args.yolo_model,
         source_dir=args.source_dir,
         destination_dir=args.destination_dir,
+        other_destination_dir=(args.other_destination_dir or None),
         conf_thresh=args.conf_thresh,
         iou_thresh=args.iou_thresh,
         max_allowed_box_diff=args.max_allowed_box_diff,
