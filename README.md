@@ -1,230 +1,130 @@
-# Percieva™ Auto-Annotation Studio
+# Percieva Auto-Annotation Studio
 
-Percieva™ Auto-Annotation Studio is a Streamlit-based workflow for:
-- ingesting videos/images,
-- filtering hard frames using model-vs-YOLO comparison,
-- augmenting data,
-- auto-annotating with YOLO,
-- comparing model performance,
-- and tracking high-level insights.
+Percieva Auto-Annotation Studio is a Streamlit workflow for building computer-vision datasets faster.
 
----
+It combines frame extraction, model-gap filtering, augmentation, auto-annotation, evaluation, and metrics-grounded insights in one UI.
 
-## Core Features
+## What It Does
 
-### 1) Annotate Page
-The Annotate page contains six tabs:
+- Upload videos or image sets and extract frames into a working folder.
+- Filter frames by comparing your latest custom model against a YOLO baseline.
+- Split filtered results into:
+  - `filtered_poor` for frames where the custom model is worse.
+  - `filtered_other` for frames where it is the same or better.
+- Copy matching `.txt` labels with filtered frames when they exist.
+- Augment images before annotation.
+- Run YOLO-based auto-annotation with class remapping.
+- Compare models against ground truth with precision, recall, F1, and per-class analysis.
+- Ask short, metrics-grounded questions in the Insights chat.
 
-1. **Upload**
-   - Upload a video or images (ZIP/files).
-   - Extract frames at a selected interval.
-   - Save frames into a target folder.
+## App Pages
 
-2. **Filter**
-   - Uses the latest model from `Model_Compare/new_model`.
-   - Uses YOLO baseline model from `Model_Compare/yolo model`.
-   - Compares both models frame-by-frame.
-   - Splits output into two folders:
-     - poor frames: latest model performs worse than YOLO,
-     - other frames: latest model is same/better than YOLO.
-   - Default output locations:
-     - `output_annotation/filtered_poor`
-     - `output_annotation/filtered_other`
+### Annotate
+- Upload
+- Filter
+- Augment
+- Image Gallery
+- Auto-Annotate
+- Annotated Gallery
 
-3. **Augment**
-   - Applies augmentation variants to source images.
-   - Supports noise, blur, motion blur, brightness/contrast, rotation, fog.
+### Model Comparison
+- Evaluate saved models against `automatic_annotation/Model_Compare/ground_truth`
+- Save outputs to `automatic_annotation/Model_Compare/output`
+- Track run history in `automatic_annotation/Model_Compare/metrics.csv`
 
-4. **Image Gallery**
-   - Browse uploaded/extracted images.
-   - Pagination and delete support.
+### Insights
+- Chat over evaluation metrics
+- Supports provider-backed responses using Groq Cloud or Cerebras Cloud
+- Responses are intentionally short and to the point by default
 
-5. **Auto-Annotate**
-   - Runs YOLO auto-annotation over selected frames.
-   - Writes labels in YOLO TXT format.
-   - Includes class management through `classes.txt`.
+## Recommended Workflow
 
-6. **Annotated Gallery**
-   - Visual review of annotations with rendered bounding boxes.
-   - Delete image + matching label together.
+1. Upload raw video or images.
+2. Filter hard frames.
+3. Review either split set in Image Gallery.
+4. Augment selected data if needed.
+5. Run Auto-Annotate.
+6. Review annotations.
+7. Run Model Comparison.
+8. Use Insights to inspect weak classes and next actions.
 
----
-
-### 2) Model Comparison Page
-This page now combines **comparison + analytics** in one place.
-
-- Run evaluation for available models against `Model_Compare/ground_truth`.
-- Save visualized comparison outputs.
-- Append metrics to `Model_Compare/metrics.csv`.
-- View:
-  - overall precision/recall/F1,
-  - per-class metrics,
-  - comparison frames,
-  - metrics trend/history,
-  - multi-model comparison tables/charts.
-
----
-
-### 3) Insights Page
-A metrics-grounded chat assistant:
-- use the workspace `Model_Compare/metrics.csv` or upload another metrics CSV,
-- ask detailed questions about weak classes, precision/recall/F1 tradeoffs, and next actions,
-- keep chat history only for the current browser session,
-- use Groq Cloud or Cerebras Cloud API keys for responses.
-
----
-
-## Project Pipeline (Recommended)
-
-1. **Upload** raw video/images in Annotate → Upload.
-2. **Filter** hard frames in Annotate → Filter.
-  - Review either split set in Annotate → Image Gallery by changing folder source.
-3. **Augment** selected data in Annotate → Augment (optional).
-4. **Auto-Annotate** in Annotate → Auto-Annotate.
-5. **Review** in Annotate → Annotated Gallery.
-6. **Evaluate** model quality in Model Comparison.
-7. **Ask metrics questions** in Insights.
-
----
-
-## Folder Expectations
-
-Inside `automatic_annotation/Model_Compare`:
-
-- `new_model/` → your latest candidate model(s), `.pt`
-- `yolo model/` → YOLO baseline model(s), `.pt`
-- `ground_truth/` → evaluation images + YOLO labels
-- `output/` → generated comparison visualization outputs
-- `metrics.csv` → cumulative run metrics
-
-Main runtime folders:
-
-- `output_frames/` → extracted/uploaded frames
-- `output_annotation/` → annotation labels/images and default filter destination
-- `videos/` → uploaded video files
-
----
-
-## Installation
-
-### Prerequisites
-- Python 3.9+
-- pip
-- (Optional) GPU-enabled PyTorch for faster inference
-
-### Setup
+## Quick Start
 
 ```bash
 cd automatic_annotation
-python -m venv venv
-source venv/bin/activate
+python -m venv ../venv
+source ../venv/bin/activate
 pip install -r requirements.txt
-```
-
----
-
-## Run Instructions
-
-### Start Streamlit UI
-
-```bash
-cd automatic_annotation
-source ../venv/bin/activate  # or your active environment
 streamlit run streamlit_app.py
 ```
 
-Open the URL shown by Streamlit (usually `http://localhost:8501`).
+Open the local Streamlit URL shown in the terminal.
 
-### Optional: Run performance filter utility directly
+## Required Project Layout
 
-```bash
-cd ..
-python performance_testing/filter_frames_by_model_gap.py \
-  --mode filter \
-  --new-model automatic_annotation/Model_Compare/new_model/<latest_model>.pt \
-  --yolo-model "automatic_annotation/Model_Compare/yolo model/<yolo_model>.pt" \
-  --source-dir automatic_annotation/output_frames \
-  --destination-dir automatic_annotation/output_annotation/filtered_poor \
-  --other-destination-dir automatic_annotation/output_annotation/filtered_other \
-  --conf-thresh 0.25 \
-  --iou-thresh 0.40 \
-  --clear-destination
+```text
+edgeverse_project/
+├── automatic_annotation/
+│   ├── streamlit_app.py
+│   ├── requirements.txt
+│   ├── data_augmentation.py
+│   ├── core/
+│   ├── tools/
+│   ├── class/
+│   ├── videos/
+│   ├── output_frames/
+│   ├── output_annotation/
+│   └── Model_Compare/
+└── performance_testing/
 ```
 
-### Optional: Run evaluation mode directly
+## Important Folders
 
-```bash
-cd ..
-python performance_testing/filter_frames_by_model_gap.py \
-  --mode evaluate \
-  --model performance_testing/model/vapp_relu_320.pt \
-  --folder-path performance_testing/data/1 \
-  --output-dir performance_testing/output/1 \
-  --conf-thresh 0.25 \
-  --iou-thresh 0.50
-```
+### `automatic_annotation/Model_Compare/`
+- `new_model/` latest custom model candidates
+- `yolo model/` YOLO baseline models
+- `ground_truth/` evaluation images and YOLO labels
+- `output/` evaluation visual outputs
+- `metrics.csv` metrics history
 
----
+### Runtime folders
+- `output_frames/` extracted, uploaded, or augmented frames
+- `output_annotation/` images, labels, and filtered output folders
+- `videos/` uploaded source videos
 
-## Threshold Tuning (Filter Tab)
+## Key Scripts
 
-- **Confidence threshold**
-  - Higher → fewer detections considered (stricter).
-  - Lower → more detections considered (looser).
+- `automatic_annotation/streamlit_app.py` main application UI
+- `automatic_annotation/tools/auto_annotation_runner.py` batch auto-annotation utility
+- `automatic_annotation/tools/segment_video.py` large-video splitter
+- `performance_testing/filter_frames_by_model_gap.py` frame filtering and evaluation utility
+- `automatic_annotation/core/insights_chat.py` metrics-grounded chat backend
 
-- **IoU threshold**
-  - Higher → tighter overlap required to count as a match.
-  - Lower → looser overlap accepted.
+## API Keys For Insights
 
-Practical effect: increasing either threshold typically marks more frames as poor.
+Set either of these before using Insights chat:
 
----
+- `GROQ_API_KEY`
+- `CEREBRAS_API_KEY`
 
-## Key Files
-
-- `streamlit_app.py` → main UI and workflows
-- `data_augmentation.py` → augmentation transforms used by Streamlit workflow
-- `core/class_manager.py` → class bootstrap/read/write helpers
-- `core/gallery_utils.py` → gallery file listing and preview drawing helpers
-- `core/comparison_metrics.py` → modular comparison and metric helper functions
-- `tools/auto_annotation_runner.py` → batch auto-label generation utility
-- `tools/segment_video.py` → large-video segmentation helper
-- `tools/create_dataset.py` → dataset split utility
-- `tools/analyze_dataset.py` → annotation statistics utility
-- `tools/write_frames.py` → frame extraction helper utility
-- `Model_Compare/evaluate_models_against_ground_truth.py` → model-ground-truth evaluation + metrics logging
-- `../performance_testing/filter_frames_by_model_gap.py` → evaluate/filter CLI used by Filter tab
-
----
-
-## Troubleshooting
-
-- **Insights chat does not answer**
-  - Provide a valid API key in the Insights page, or export `GROQ_API_KEY` / `CEREBRAS_API_KEY`.
-  - Confirm the selected model name is supported by your provider.
-
-- **Insights chat has no data**
-  - Run at least one evaluation from Model Comparison, or upload a valid metrics CSV.
-
-- **No models found in Filter tab**
-  - Ensure `.pt` files exist in:
-    - `Model_Compare/new_model`
-    - `Model_Compare/yolo model`
-
-- **No frames selected by filter**
-  - Lower IoU and/or confidence thresholds.
-  - Verify source folder contains images.
-
-- **Metrics not showing in Model Comparison**
-  - Run at least one evaluation from the page.
-  - Confirm `Model_Compare/metrics.csv` is writable.
-
-- **Import errors in editor**
-  - Activate your virtual environment and install requirements.
-
----
+The app also loads values from `automatic_annotation/.env` when present.
 
 ## Notes
 
-- Filter copies source images into split folders (`filtered_poor` and optional `filtered_other`).
-- Filter also copies matching YOLO label files (`same_name.txt`) when present in the source folder.
+- Auto-annotation looks for one of these model files in `automatic_annotation/`:
+  - `yolo12s.pt`
+  - `yolo11n.pt`
+  - `best.pt`
+  - `yolo12m.pt`
+- `class/new_classes.txt` is used to initialize `output_annotation/classes.txt` on first run.
+- Filtering keeps paired label files when the source folder already contains matching `.txt` files.
+
+## Need Full Setup Details?
+
+See `guide.txt` for:
+
+- exact folder expectations
+- model placement
+- first-run checklist
+- troubleshooting
+- modular file structure
