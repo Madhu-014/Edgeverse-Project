@@ -44,7 +44,7 @@ def get_video_duration(video_path: str) -> float:
         )
         return float(result.stdout.strip())
     except (subprocess.CalledProcessError, ValueError) as e:
-        print(f"❌ Error getting video duration: {e}")
+        print(f"[ERROR] Error getting video duration: {e}")
         return None
 
 
@@ -113,7 +113,7 @@ def segment_video(
     """
     # Validate input
     if not os.path.exists(input_video):
-        print(f"❌ Error: Input video '{input_video}' not found")
+        print(f"[ERROR] Input video '{input_video}' not found")
         return False
 
     input_path = Path(input_video)
@@ -121,7 +121,7 @@ def segment_video(
     output_path.mkdir(parents=True, exist_ok=True)
 
     # Get video info
-    print(f"\n📹 Analyzing video: {input_path.name}")
+    print(f"\n[INFO] Analyzing video: {input_path.name}")
     print(f"   Location: {input_path.absolute()}")
 
     file_size_mb = get_file_size_mb(input_video)
@@ -129,7 +129,7 @@ def segment_video(
 
     # Check if segmentation is needed
     if file_size_mb <= chunk_size_mb:
-        print(f"\n✓ Video is already under {chunk_size_mb}MB ({file_size_mb:.2f}MB)")
+        print(f"\n[OK] Video is already under {chunk_size_mb}MB ({file_size_mb:.2f}MB)")
         print("  No segmentation needed!")
         return True
 
@@ -143,17 +143,17 @@ def segment_video(
     segment_duration = calculate_segment_duration(input_video, chunk_size_mb, total_duration)
 
     if segment_duration <= 0:
-        print("❌ Error: Could not calculate segment duration")
+        print("[ERROR] Could not calculate segment duration")
         return False
 
     num_segments = int(total_duration / segment_duration) + 1
 
-    print(f"\n⚙️  Segmentation Plan:")
+    print(f"\n[PLAN] Segmentation Plan:")
     print(f"   Target chunk size: {chunk_size_mb}MB")
     print(f"   Estimated segments: {num_segments}")
     print(f"   Segment duration: {segment_duration / 60:.2f} minutes each")
-    print(f"\n📁 Output directory: {output_path.absolute()}")
-    print(f"\n🎬 Starting segmentation...\n")
+    print(f"\n[INFO] Output directory: {output_path.absolute()}")
+    print(f"\n[RUN] Starting segmentation...\n")
 
     # Segment the video
     segment_num = 0
@@ -187,19 +187,19 @@ def segment_video(
         try:
             subprocess.run(cmd, check=True, capture_output=True)
             output_size = get_file_size_mb(str(output_file))
-            print(f"          ✓ Created ({output_size:.2f}MB)\n")
+            print(f"          [OK] Created ({output_size:.2f}MB)\n")
             segment_num += 1
             start_time = end_time
         except subprocess.CalledProcessError as e:
-            print(f"          ❌ Error creating segment: {e}\n")
+            print(f"          [ERROR] Error creating segment: {e}\n")
             return False
 
-    print(f"\n✅ Segmentation completed successfully!")
+    print(f"\n[OK] Segmentation completed successfully.")
     print(f"   Total segments created: {segment_num}")
     print(f"   Output directory: {output_path.absolute()}\n")
 
     # Print instructions
-    print("📋 Next Steps:")
+    print("[NEXT] Next Steps:")
     print(f"   1. Upload each segment file separately to ARAS Auto-Annotation Studio")
     print(f"   2. All segments will be saved to the same output_frames directory")
     print(f"   3. All segments can be processed together for unified annotation\n")

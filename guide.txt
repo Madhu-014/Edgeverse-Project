@@ -180,6 +180,11 @@ Large video split helper:
 4. Import errors in editor:
    - Activate venv and reinstall requirements.
 
+5. Insights chat shows no answer:
+  - Load a valid metrics CSV.
+  - Provide a Groq Cloud or Cerebras Cloud API key.
+  - Verify the selected model name exists for that provider.
+
 --------------------------------------------------
 11) MODULAR CODE STRUCTURE (REPLACEABLE SEGMENTS)
 --------------------------------------------------

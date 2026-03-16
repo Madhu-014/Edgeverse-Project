@@ -15,7 +15,7 @@ def analyze_annotations(annotations_dir: str, output_file: str = None, start_fra
     """
     
     if not os.path.exists(annotations_dir):
-        print(f"❌ ERROR: Annotations directory not found: {annotations_dir}")
+        print(f"[ERROR] Annotations directory not found: {annotations_dir}")
         return {}
     
     # Auto-detect end frame if not provided
@@ -36,10 +36,10 @@ def analyze_annotations(annotations_dir: str, output_file: str = None, start_fra
             end_frame = 0
     
     if end_frame == 0:
-        print(f"⚠ No frames found in {annotations_dir}")
+        print(f"[WARN] No frames found in {annotations_dir}")
         return {}
     
-    print(f"ℹ Analyzing frames {start_frame} to {end_frame} from: {annotations_dir}")
+    print(f"[INFO] Analyzing frames {start_frame} to {end_frame} from: {annotations_dir}")
     
     # Dictionary to count class occurrences
     class_counts = defaultdict(int)
@@ -64,10 +64,10 @@ def analyze_annotations(annotations_dir: str, output_file: str = None, start_fra
                     class_counts[class_id] += 1
     
     if frames_found == 0:
-        print(f"⚠ No annotation files found in range {start_frame}-{end_frame}")
+        print(f"[WARN] No annotation files found in range {start_frame}-{end_frame}")
         return {}
     
-    print(f"✓ Found and processed {frames_found} annotation files")
+    print(f"[OK] Found and processed {frames_found} annotation files")
     
     # Write the results to a file if specified
     if output_file:
@@ -76,9 +76,9 @@ def analyze_annotations(annotations_dir: str, output_file: str = None, start_fra
                 out.write("Class_ID\tCount\n")
                 for class_id in sorted(class_counts, key=lambda x: int(x)):
                     out.write(f"{class_id}\t\t\t{class_counts[class_id]}\n")
-            print(f"✓ Class counts written to: {output_file}")
+            print(f"[OK] Class counts written to: {output_file}")
         except Exception as e:
-            print(f"❌ Error writing output file: {e}")
+            print(f"[ERROR] Error writing output file: {e}")
     
     return class_counts
 

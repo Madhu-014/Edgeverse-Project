@@ -66,12 +66,11 @@ This page now combines **comparison + analytics** in one place.
 ---
 
 ### 3) Insights Page
-A lightweight summary dashboard:
-- frame count,
-- annotated image count,
-- label file count,
-- model run count,
-- latest run summary (model, precision, recall).
+A metrics-grounded chat assistant:
+- use the workspace `Model_Compare/metrics.csv` or upload another metrics CSV,
+- ask detailed questions about weak classes, precision/recall/F1 tradeoffs, and next actions,
+- keep chat history only for the current browser session,
+- use Groq Cloud or Cerebras Cloud API keys for responses.
 
 ---
 
@@ -84,7 +83,7 @@ A lightweight summary dashboard:
 4. **Auto-Annotate** in Annotate → Auto-Annotate.
 5. **Review** in Annotate → Annotated Gallery.
 6. **Evaluate** model quality in Model Comparison.
-7. **Track status** in Insights.
+7. **Ask metrics questions** in Insights.
 
 ---
 
@@ -199,6 +198,13 @@ Practical effect: increasing either threshold typically marks more frames as poo
 ---
 
 ## Troubleshooting
+
+- **Insights chat does not answer**
+  - Provide a valid API key in the Insights page, or export `GROQ_API_KEY` / `CEREBRAS_API_KEY`.
+  - Confirm the selected model name is supported by your provider.
+
+- **Insights chat has no data**
+  - Run at least one evaluation from Model Comparison, or upload a valid metrics CSV.
 
 - **No models found in Filter tab**
   - Ensure `.pt` files exist in:

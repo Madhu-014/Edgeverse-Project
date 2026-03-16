@@ -17,6 +17,17 @@ import subprocess
 from pathlib import Path
 from datetime import datetime
 
+# Load environment variables from .env file
+env_file = Path(__file__).resolve().parent / ".env"
+if env_file.exists():
+    with open(env_file) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#'):
+                if '=' in line:
+                    key, value = line.split('=', 1)
+                    os.environ[key] = value
+
 import cv2
 import numpy as np
 import pandas as pd
@@ -30,6 +41,7 @@ from data_augmentation import (
 from core import class_manager as class_utils
 from core import gallery_utils as gallery_utils
 from core import comparison_metrics as cmp_utils
+from core import insights_chat as insights_chat_utils
 
 APP_DIR = Path(__file__).resolve().parent
 BASE_DIR = APP_DIR
@@ -1409,6 +1421,279 @@ div[data-testid="stRadio"]:has(input[name="nav_page"]) input:checked + div {
 [data-testid="stVerticalBlock"] > div:has(.section-card):nth-child(4) .section-card { animation-delay: 0.14s; }
 [data-testid="stVerticalBlock"] [data-testid="stMetric"] { animation: riseIn 0.45s ease-out both; }
 
+/* ===== ENHANCED SIDEBAR & NAVIGATION ===== */
+[data-testid="stSidebarContent"] {
+    padding: 1.5rem 1rem !important;
+}
+
+.sidebar-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding-top: 0.5rem;
+    animation: slideDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes navItemSlide {
+    from { opacity: 0; transform: translateX(-16px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.sidebar-nav-item {
+    margin-bottom: 1rem;
+    animation: navItemSlide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sidebar-nav-item:nth-child(1) { animation-delay: 0.1s; }
+.sidebar-nav-item:nth-child(2) { animation-delay: 0.15s; }
+.sidebar-nav-item:nth-child(3) { animation-delay: 0.2s; }
+
+[data-testid="stSidebarCollapsedControl"] {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%) !important;
+    border: 1px solid rgba(34, 211, 238, 0.2) !important;
+    border-radius: 12px !important;
+}
+
+/* ===== ENHANCED BUTTONS ===== */
+.stButton > button {
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.stButton > button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.stButton > button:hover::before {
+    left: 100%;
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px) scale(1.01) !important;
+    box-shadow: 0 12px 40px rgba(34, 211, 238, 0.3) !important;
+}
+
+/* ===== ENHANCED TABS ===== */
+.stTabs [data-baseweb="tab"] {
+    border-radius: 10px 10px 0 0 !important;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.5) 0%, rgba(30, 41, 59, 0.5) 100%) !important;
+    border: 1px solid rgba(34, 211, 238, 0.15) !important;
+    color: #a4b3cc !important;
+    font-weight: 600 !important;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.7) 100%) !important;
+    color: #22d3ee !important;
+    border-color: rgba(34, 211, 238, 0.3) !important;
+}
+
+.stTabs [aria-selected="true"] {
+    background: linear-gradient(135deg, rgba(34, 211, 238, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%) !important;
+    color: #22d3ee !important;
+    border-color: rgba(34, 211, 238, 0.5) !important;
+    box-shadow: 0 4px 12px rgba(34, 211, 238, 0.15) !important;
+}
+
+/* ===== ENHANCED INPUTS & FORMS ===== */
+.stTextInput > div > div > input,
+.stSelectbox > div > div > input,
+.stNumberInput > div > div > input,
+.stDateInput > div > div > input {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.8) 100%) !important;
+    border: 1px solid rgba(34, 211, 238, 0.2) !important;
+    color: #e2e8f0 !important;
+    border-radius: 10px !important;
+    transition: all 0.3s ease !important;
+    padding: 0.65rem 0.85rem !important;
+}
+
+.stTextInput > div > div > input:focus,
+.stSelectbox > div > div > input:focus,
+.stNumberInput > div > div > input:focus,
+.stDateInput > div > div > input:focus {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%) !important;
+    border-color: rgba(34, 211, 238, 0.5) !important;
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.1), inset 0 0 10px rgba(34, 211, 238, 0.08) !important;
+}
+
+::placeholder {
+    color: rgba(164, 179, 204, 0.5) !important;
+}
+
+/* ===== ENHANCED METRICS ===== */
+[data-testid="stMetric"] {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.6) 100%) !important;
+    border: 1px solid rgba(34, 211, 238, 0.15) !important;
+    border-radius: 14px !important;
+    padding: 1.25rem !important;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-testid="stMetric"]:hover {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.8) 100%) !important;
+    border-color: rgba(34, 211, 238, 0.3) !important;
+    transform: translateY(-4px) !important;
+    box-shadow: 0 8px 24px rgba(34, 211, 238, 0.15) !important;
+}
+
+[data-testid="stMetricLabel"] {
+    color: #94a3b8 !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+}
+
+[data-testid="stMetricValue"] {
+    color: #22d3ee !important;
+    font-weight: 700 !important;
+    font-size: 1.5rem !important;
+}
+
+/* ===== ENHANCED SECTION CARDS ===== */
+.section-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.7) 100%) !important;
+    border: 1px solid rgba(34, 211, 238, 0.2) !important;
+    border-radius: 16px !important;
+    padding: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+    backdrop-filter: blur(10px) !important;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    animation: cardEnter 0.6s ease-out both !important;
+}
+
+@keyframes cardEnter {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.section-card:hover {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%) !important;
+    border-color: rgba(34, 211, 238, 0.4) !important;
+    transform: translateY(-6px) !important;
+    box-shadow: 0 20px 50px rgba(34, 211, 238, 0.2) !important;
+}
+
+.section-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
+.section-icon {
+    background: linear-gradient(135deg, #22d3ee 0%, #08b9d4 100%) !important;
+    padding: 0.75rem !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+    flex-shrink: 0 !important;
+}
+
+.section-title {
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    color: #e2e8f0 !important;
+    margin: 0 !important;
+}
+
+.section-desc {
+    font-size: 0.9rem !important;
+    color: #94a3b8 !important;
+    margin: 0.25rem 0 0 0 !important;
+}
+
+/* ===== ENHANCED SELECTBOX & RADIO ===== */
+[data-baseweb="select"] {
+    --placeholder: #94a3b8 !important;
+}
+
+/* Upload source selector (segmented) */
+div[data-testid="stSegmentedControl"] {
+    background: linear-gradient(135deg, rgba(20, 28, 44, 0.74) 0%, rgba(11, 17, 30, 0.74) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 14px;
+    padding: 0.35rem;
+    margin: 0.2rem 0 1rem 0;
+    box-shadow: 0 10px 24px rgba(2, 8, 20, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(8px);
+}
+
+div[data-testid="stSegmentedControl"] button {
+    border-radius: 10px !important;
+    border: 1px solid transparent !important;
+    color: #cbd5e1 !important;
+    font-weight: 700 !important;
+    min-height: 42px !important;
+    transition: all 0.26s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+div[data-testid="stSegmentedControl"] button:hover {
+    border-color: rgba(45, 212, 191, 0.45) !important;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.8) 100%) !important;
+    transform: translateY(-1px);
+}
+
+div[data-testid="stSegmentedControl"] button[aria-pressed="true"] {
+    background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%) !important;
+    color: #052e2b !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+[data-testid="stRadio"] > div {
+    gap: 1rem !important;
+}
+
+[data-testid="stRadio"] label {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.6) 100%) !important;
+    border: 1px solid rgba(34, 211, 238, 0.2) !important;
+    border-radius: 10px !important;
+    padding: 0.65rem 1rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+}
+
+[data-testid="stRadio"] label:hover {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.8) 100%) !important;
+    border-color: rgba(34, 211, 238, 0.4) !important;
+}
+
+[data-testid="stRadio"] input:checked + div {
+    background: linear-gradient(135deg, #22d3ee 0%, #08b9d4 100%) !important;
+    color: #0c2340 !important;
+}
+
+/* ===== ENHANCED ALERTS ===== */
+.stAlert {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.7) 100%) !important;
+    border-left: 4px solid rgba(34, 211, 238, 0.5) !important;
+    border-radius: 10px !important;
+    padding: 1rem 1.25rem !important;
+    backdrop-filter: blur(10px) !important;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
     .hero-title {
@@ -1458,6 +1743,13 @@ elif page_param in ["insights", "analytics"]:
     current_page = "Insights"
 else:
     current_page = "Annotate"
+
+# Auto-scroll to top when page changes
+st.markdown("""
+<script>
+    window.scrollTo({top: 0, behavior: 'smooth'});
+</script>
+""", unsafe_allow_html=True)
 
 # Sidebar Navigation
 with st.sidebar:
@@ -1665,7 +1957,7 @@ if current_page == "Annotate":
             st.metric("Max Size", "200 MB")
         
         st.warning("""
-        **⚠ Video Size Limit:** Videos must be under 200MB for upload.
+        **Video Size Limit:** Videos must be under 200MB for upload.
         
         **If your video is larger:** Use the `tools/segment_video.py` tool to split it into 200MB chunks:
         ```
@@ -1674,9 +1966,17 @@ if current_page == "Annotate":
         Then upload each segment separately. All segments will be extracted to the same output folder.
         """)
         
-        st.info(f"ℹ **Current destination:** `{FRAMES_DIR}` — Edit in **Settings** to use a different directory")
+        st.info(f"Current destination: `{FRAMES_DIR}`. Edit in **Settings** to use a different directory.")
         
-        src_type = st.radio("Select source", ["Video (.mp4)", "Images (ZIP/Files)"], horizontal=True)
+        st.markdown("<p class='section-desc' style='margin:0.15rem 0 0.45rem 0;'>Choose your input type to continue with upload and extraction.</p>", unsafe_allow_html=True)
+        src_type = st.segmented_control(
+            "Select source",
+            ["Video (.mp4)", "Images (ZIP/Files)"],
+            default="Video (.mp4)",
+            key="upload_source_selector",
+        )
+        if src_type is None:
+            src_type = "Video (.mp4)"
         
         col1, col2 = st.columns([3, 1])
         with col1:
@@ -1689,7 +1989,7 @@ if current_page == "Annotate":
             interval = st.number_input("Frame interval (seconds)", min_value=1, max_value=30, value=3, step=1)
             
             if up_video is not None:
-                st.success(f"✓ Video loaded: {up_video.name} ({up_video.size / 1024 / 1024:.2f} MB)")
+                st.success(f"Video loaded: {up_video.name} ({up_video.size / 1024 / 1024:.2f} MB)")
                 if st.button("Extract Frames", type="primary"):
                     with st.spinner("Extracting frames..."):
                         saved = Path(VIDEOS_DIR) / up_video.name
@@ -1704,7 +2004,7 @@ if current_page == "Annotate":
                             if item.is_file() and item.suffix.lower() in ['.jpg', '.jpeg', '.png', '.bmp']:
                                 item.unlink()
                         count = extract_frames_every(str(saved), str(out_dir), interval_seconds=int(interval))
-                    st.success(f"✓ Cleared previous frames and extracted {count} new frames to {out_dir}")
+                    st.success(f"Cleared previous frames and extracted {count} new frames to {out_dir}")
                     st.balloons()
         else:
             up_zip = st.file_uploader("Images ZIP", type=["zip"], key="zip_upl")
@@ -1726,7 +2026,7 @@ if current_page == "Annotate":
                             for f in up_imgs:
                                 with open(out_dir / f.name, "wb") as fo:
                                     fo.write(f.getbuffer())
-                    st.success(f"✓ Cleared previous images and saved {len(up_imgs) if up_imgs else 'ZIP'} new images to {out_dir}")
+                    st.success(f"Cleared previous images and saved {len(up_imgs) if up_imgs else 'ZIP'} new images to {out_dir}")
                     st.balloons()
     
     # TAB 2: FILTER
@@ -1866,7 +2166,7 @@ if current_page == "Annotate":
                             st.session_state["filter_poor_dir"] = summary.get("poor_destination_dir", destination_filter_dir)
                             st.session_state["filter_other_dir"] = summary.get("other_destination_dir", other_destination_filter_dir)
 
-                            st.success("✓ Filtering completed. Frames were split into poor and other sets.")
+                            st.success("Filtering completed. Frames were split into poor and other sets.")
                             metric_col1, metric_col2, metric_col3 = st.columns(3)
                             with metric_col1:
                                 st.metric("Total Images", int(summary.get("total_images", 0)))
@@ -1949,7 +2249,7 @@ if current_page == "Annotate":
                 for img_file in Path(aug_target).glob("*.jpg") + Path(aug_target).glob("*.png"):
                     if "aug_" in img_file.name or img_file.name.count('_') > 1:
                         shutil.copy2(img_file, output_frames_dir / img_file.name)
-            st.success(f"✓ Created {written} augmented images and saved to output frames")
+            st.success(f"Created {written} augmented images and saved to output frames")
             st.balloons()
     
     # TAB 4: IMAGE GALLERY (BEFORE ANNOTATION)
@@ -2082,10 +2382,10 @@ if current_page == "Annotate":
                         st.markdown('<div style="text-align: center; margin-top: 0.5rem;"></div>', unsafe_allow_html=True)
                         col_spacer1, col_del, col_spacer2 = st.columns([1, 2, 1])
                         with col_del:
-                            if st.button("🗑️ Delete", key=f"del_gallery_{i}_{start_idx}", use_container_width=True, help=f"Delete {p.name}"):
+                            if st.button("Delete", key=f"del_gallery_{i}_{start_idx}", use_container_width=True, help=f"Delete {p.name}"):
                                 try:
                                     p.unlink()
-                                    st.success(f"✓ Deleted {p.name}")
+                                    st.success(f"Deleted {p.name}")
                                     st.rerun()
                                 except Exception as e:
                                     st.error(f"Error: {str(e)[:50]}")
@@ -2094,7 +2394,7 @@ if current_page == "Annotate":
         else:
             st.markdown("""
             <div style="text-align: center; padding: 2rem; background: rgba(15, 23, 42, 0.4); border: 2px dashed rgba(148, 163, 184, 0.2); border-radius: 16px;">
-                <p style="color: #94a3b8; font-size: 1.1rem; margin: 0;">📷 No images found</p>
+                <p style="color: #94a3b8; font-size: 1.1rem; margin: 0;">No images found</p>
                 <p style="color: #64748b; font-size: 0.9rem; margin: 0.5rem 0 0 0;">Start by uploading images or extracting frames from a video</p>
             </div>
             """, unsafe_allow_html=True)
@@ -2202,7 +2502,7 @@ if current_page == "Annotate":
             
             frames_list = list_images(frames_dir)
             if not frames_list:
-                st.error(f"❌ No frames found in {frames_dir}")
+                st.error(f"No frames found in {frames_dir}")
             else:
                 st.info(f"Found {len(frames_list)} frames. Starting annotation...")
                 with st.spinner("Running YOLO inference..."):
@@ -2214,10 +2514,10 @@ if current_page == "Annotate":
                     )
                 
                 if proc.returncode == 0:
-                    st.success("✓ Auto-annotation completed!")
+                    st.success("Auto-annotation completed.")
                     st.balloons()
                 else:
-                    st.error(f"❌ Failed with code {proc.returncode}")
+                    st.error(f"Failed with code {proc.returncode}")
     
     # TAB 6: ANNOTATED GALLERY (AFTER ANNOTATION)
     with tabs[5]:
@@ -2321,13 +2621,13 @@ if current_page == "Annotate":
                         st.markdown('<div style="text-align: center; margin-top: 0.5rem;"></div>', unsafe_allow_html=True)
                         col_spacer1, col_del, col_spacer2 = st.columns([1, 2, 1])
                         with col_del:
-                            if st.button("🗑️ Delete", key=f"del_annotated_{i}_{start_idx}", use_container_width=True, help="Delete image and annotation"):
+                            if st.button("Delete", key=f"del_annotated_{i}_{start_idx}", use_container_width=True, help="Delete image and annotation"):
                                 try:
                                     txt_file = p.with_suffix(".txt")
                                     p.unlink()
                                     if txt_file.exists():
                                         txt_file.unlink()
-                                    st.success(f"✓ Deleted {p.name}")
+                                    st.success(f"Deleted {p.name}")
                                     st.rerun()
                                 except Exception as e:
                                     st.error(f"Error: {str(e)[:50]}")
@@ -2664,7 +2964,7 @@ elif current_page == "Model Comparison":
                             st.warning("Evaluation found no GT/prediction boxes. Metrics entry was not saved.")
                         else:
                             save_metrics_to_csv(results)
-                            st.success(f"✓ Comparison completed!\nPrecision: {results['precision']:.2%} | Recall: {results['recall']:.2%} | F1: {results['f1_score']:.2%}")
+                            st.success(f"Comparison completed.\nPrecision: {results['precision']:.2%} | Recall: {results['recall']:.2%} | F1: {results['f1_score']:.2%}")
                 else:
                     st.error("Please select a model first")
 
@@ -3065,82 +3365,320 @@ elif current_page == "Model Comparison":
 
 # INSIGHTS PAGE
 elif current_page == "Insights":
-    st.markdown("""
-    <div class="hero-header">
-        <h1 class="hero-title">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:8px;">
-                <path d="M3 3v18h18"></path>
-                <path d="M7 14l3-3 3 2 4-5"></path>
-                <circle cx="10" cy="11" r="1"></circle>
-                <circle cx="13" cy="13" r="1"></circle>
-                <circle cx="17" cy="8" r="1"></circle>
-            </svg>
-            Insights
-        </h1>
-        <p class="hero-subtitle">Quick summary of your annotation and model comparison workspace</p>
-        <div class="hero-badges">
-            <span class="hero-badge">Run Summary</span>
-            <span class="hero-badge">Data Health</span>
-            <span class="hero-badge">Next Actions</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        """
+        <style>
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.1); }
+            50% { box-shadow: 0 0 40px rgba(34, 211, 238, 0.25); }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-3px); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        @keyframes messageEnter {
+            from { opacity: 0; transform: translateY(10px) scale(0.99); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes shimmerBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .insights-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem 4rem 1rem;
+            animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .hero-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: slideUp 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+            padding: 2rem 0;
+        }
+        
+        .hero-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-bottom: 0.8rem;
+            letter-spacing: -0.02em;
+        }
+        
+        .hero-subtitle {
+            font-size: 1rem;
+            color: rgba(226, 232, 240, 0.65);
+            font-weight: 400;
+            animation: slideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+        }
+        
+        .insights-chat-history {
+            margin-bottom: 2.5rem;
+            scroll-behavior: smooth;
+            animation: fadeIn 0.6s ease-out 0.2s both;
+        }
+        
+        .insights-chat-input-container {
+            margin-top: 3rem;
+            animation: slideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+            position: relative;
+        }
+        
+        div[data-testid="stChatMessage"] {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.65) 100%);
+            border: 1px solid rgba(34, 211, 238, 0.15);
+            border-radius: 18px;
+            padding: 1.2rem 1.4rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 12px 35px rgba(2, 6, 23, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: messageEnter 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+            backdrop-filter: blur(8px);
+        }
+
+        div[data-testid="stChatMessage"][data-testid*="user"] {
+            border-color: rgba(59, 130, 246, 0.28);
+            box-shadow: 0 12px 35px rgba(30, 64, 175, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        div[data-testid="stChatMessage"][data-testid*="assistant"] {
+            border-color: rgba(34, 211, 238, 0.22);
+        }
+        
+        div[data-testid="stChatMessage"]:hover {
+            border-color: rgba(34, 211, 238, 0.25);
+            box-shadow: 0 20px 50px rgba(34, 211, 238, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.75) 100%);
+        }
+        
+        div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p {
+            color: #e2e8f0;
+            line-height: 1.8;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+        }
+        
+        div[data-testid="stChatInputContainer"] {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        div[data-testid="stChatInput"] {
+            position: relative;
+            animation: slideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.25s both;
+        }
+        
+        div[data-testid="stChatInput"] textarea {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%) !important;
+            border-radius: 16px !important;
+            border: 1.5px solid rgba(34, 211, 238, 0.25) !important;
+            padding: 1.1rem 1.4rem !important;
+            min-height: 54px !important;
+            max-height: 150px !important;
+            font-size: 0.96rem !important;
+            color: #e2e8f0 !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            box-shadow: 
+                0 8px 32px rgba(34, 211, 238, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.1) !important;
+            caret-color: #22d3ee !important;
+            backdrop-filter: blur(12px) !important;
+            letter-spacing: 0.3px;
+        }
+        
+        div[data-testid="stChatInput"] textarea::placeholder {
+            color: rgba(226, 232, 240, 0.5) !important;
+            font-style: italic;
+            font-weight: 500;
+        }
+        
+        div[data-testid="stChatInput"] textarea:focus {
+            border-color: rgba(34, 211, 238, 0.65) !important;
+            outline: none !important;
+            box-shadow: 
+                0 0 0 3px rgba(34, 211, 238, 0.1),
+                0 20px 60px rgba(34, 211, 238, 0.2),
+                inset 0 1px 2px rgba(255, 255, 255, 0.15),
+                inset 0 0 20px rgba(34, 211, 238, 0.1) !important;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 1) 0%, rgba(30, 41, 59, 0.95) 100%) !important;
+            transform: translateY(-2px) !important;
+        }
+        
+        div[data-testid="stChatInput"] textarea:hover:not(:focus) {
+            border-color: rgba(34, 211, 238, 0.35) !important;
+            box-shadow: 
+                0 12px 40px rgba(34, 211, 238, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.93) 100%) !important;
+        }
+        
+        div[data-testid="stChatInput"] button {
+            background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%) !important;
+            border: none !important;
+            border-radius: 12px !important;
+            padding: 0.7rem 1.2rem !important;
+            font-weight: 600 !important;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            box-shadow: 0 8px 25px rgba(34, 211, 238, 0.3) !important;
+            cursor: pointer;
+            color: #0c2340 !important;
+        }
+        
+        div[data-testid="stChatInput"] button:hover {
+            box-shadow: 0 12px 35px rgba(34, 211, 238, 0.4) !important;
+            transform: translateY(-2px) !important;
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
+        }
+        
+        div[data-testid="stChatInput"] button:active {
+            transform: translateY(0) !important;
+            box-shadow: 0 4px 15px rgba(34, 211, 238, 0.2) !important;
+        }
+        
+        .st-emotion-cache-jchovf.e5ztmp71 {
+            margin-top: 0 !important;
+        }
+        
+        [data-testid="stBottomBlockContainer"] {
+            margin-top: -3.5rem !important;
+            padding: 1.5rem 1.5rem 1rem 1.5rem !important;
+            min-height: 100px !important;
+            max-height: 140px !important;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(20, 30, 48, 0.5) 100%) !important;
+            border: 1px solid rgba(34, 211, 238, 0.15) !important;
+            border-radius: 16px !important;
+            backdrop-filter: blur(10px) !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(34, 211, 238, 0.1) !important;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .insights-container,
+            .hero-header,
+            .hero-subtitle,
+            .insights-chat-history,
+            .insights-chat-input-container,
+            div[data-testid="stChatMessage"],
+            div[data-testid="stChatInput"],
+            div[data-testid="stChatInput"] button,
+            div[data-testid="stChatInput"] textarea {
+                animation: none !important;
+                transition: none !important;
+                transform: none !important;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
     compare_base_dir = Path(__file__).resolve().parent / "Model_Compare"
     metrics_csv = compare_base_dir / "metrics.csv"
-    frames_dir = Path(st.session_state.get("frames_dir", str(FRAMES_DIR)))
-    annot_dir = Path(st.session_state.get("annot_dir", str(ANNOT_DIR)))
 
-    def count_images(folder_path):
-        """Count all image files recursively in a folder for Insights summary."""
-        if not folder_path.exists():
-            return 0
-        return len([
-            path for path in folder_path.rglob("*")
-            if path.is_file() and path.suffix.lower() in [".jpg", ".jpeg", ".png", ".bmp"]
-        ])
+    metrics_df = insights_chat_utils.load_metrics_csv(metrics_csv)
+    metrics_signature = insights_chat_utils.detect_metrics_signature(metrics_csv)
+    
+    if st.session_state.get("insights_chat_metrics_signature") != metrics_signature:
+        st.session_state["insights_chat_metrics_signature"] = metrics_signature
+        st.session_state["insights_chat_history"] = []
 
-    frame_count = count_images(frames_dir)
-    annot_image_count = count_images(annot_dir)
-    label_count = len(list(annot_dir.rglob("*.txt"))) if annot_dir.exists() else 0
+    provider_options = list(insights_chat_utils.PROVIDER_CONFIG.keys())
+    provider = provider_options[0]
+    provider_config = insights_chat_utils.PROVIDER_CONFIG[provider]
+    api_key = os.getenv(provider_config["env_var"], "")
+    model_name = provider_config["default_model"]
 
-    metrics_df = pd.read_csv(metrics_csv) if metrics_csv.exists() else pd.DataFrame()
+    chat_history = st.session_state.setdefault("insights_chat_history", [])
 
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Frames", frame_count)
-    with col2:
-        st.metric("Annotated Images", annot_image_count)
-    with col3:
-        st.metric("Label Files", label_count)
-    with col4:
-        st.metric("Model Runs", len(metrics_df) if len(metrics_df) > 0 else 0)
+    # Open main container - everything stays inside
+    st.markdown('<div class="insights-container">', unsafe_allow_html=True)
+    
+    # Header
+    st.markdown(
+        """
+        <div class="hero-header">
+            <h1 class="hero-title">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:8px;animation: float 3s ease-in-out infinite;">
+                    <path d="M12 2a3 3 0 0 0-3 3v1H7a3 3 0 0 0-3 3v4a3 3 0 0 0 3 3h1.1l1.3 3.16A1.5 1.5 0 0 0 10.78 20h2.44a1.5 1.5 0 0 0 1.38-.84L15.9 16H17a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3h-2V5a3 3 0 0 0-3-3Z"></path>
+                    <path d="M9 10h6"></path>
+                    <path d="M9 13h4"></path>
+                </svg>
+                Insights Copilot
+            </h1>
+            <p class="hero-subtitle">Ask questions about your metrics • concise answers by default</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    
+    # Chat history - no wrapper box
+    st.markdown('<div class="insights-chat-history">', unsafe_allow_html=True)
+    
+    for message in chat_history:
+        role = message.get("role", "assistant")
+        avatar = ":material/smart_toy:" if role == "assistant" else ":material/account_circle:"
+        with st.chat_message(role, avatar=avatar):
+            st.markdown(message.get("content", ""))
 
-    st.divider()
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    if len(metrics_df) > 0:
-        model_col = 'model_name' if 'model_name' in metrics_df.columns else 'model'
-        date_col = 'date' if 'date' in metrics_df.columns else 'timestamp'
-        prec_col = 'overall_precision' if 'overall_precision' in metrics_df.columns else 'precision'
-        rec_col = 'overall_recall' if 'overall_recall' in metrics_df.columns else 'recall'
+    # Input container
+    st.markdown('<div class="insights-chat-input-container">', unsafe_allow_html=True)
+    
+    user_prompt = st.chat_input("What insights about your models? Ask anything...")
 
-        work_df = metrics_df.copy()
-        work_df[date_col] = pd.to_datetime(work_df[date_col], errors='coerce')
-        work_df = work_df.sort_values(date_col)
-        latest = work_df.tail(1).iloc[0]
+    st.markdown('</div></div>', unsafe_allow_html=True)  # Close input container and main container
 
-        st.markdown("### Latest Run")
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            st.metric("Model", str(latest.get(model_col, "-")))
-        with c2:
-            st.metric("Precision", f"{float(latest.get(prec_col, 0.0)):.2%}")
-        with c3:
-            st.metric("Recall", f"{float(latest.get(rec_col, 0.0)):.2%}")
+    if user_prompt:
+        chat_history.append({"role": "user", "content": user_prompt})
 
-        st.caption("Detailed analytics, comparisons, and trends are available in the Model Comparison page.")
-    else:
-        st.info("No model metrics found yet. Run at least one evaluation in Model Comparison.")
+        selected_docs, metrics_context = insights_chat_utils.retrieve_context(metrics_df, user_prompt)
+
+        if not api_key:
+            response = f"Set {provider_config['env_var']} environment variable with your API key."
+        elif metrics_df.empty:
+            response = "No metrics data found. Run evaluations in Model Comparison first."
+        else:
+            with st.spinner("Retrieving context and drafting answer..."):
+                try:
+                    messages = insights_chat_utils.build_messages(chat_history, metrics_context)
+                    response = insights_chat_utils.request_chat_completion(
+                        provider=provider,
+                        api_key=api_key,
+                        model_name=model_name,
+                        messages=messages,
+                    )
+                except Exception as exc:
+                    response = f"Request failed: {exc}"
+
+        chat_history.append({"role": "assistant", "content": response})
+        st.rerun()
+
 
 
 

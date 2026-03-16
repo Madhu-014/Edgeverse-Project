@@ -29,31 +29,31 @@ def main():
         model = None
         for model_file in model_files:
             if os.path.exists(model_file):
-                print(f"✓ Loading model: {model_file}")
+                print(f"[OK] Loading model: {model_file}")
                 model = YOLO(model_file)
                 break
         
         if model is None:
-            print(f"❌ ERROR: No YOLO model found. Checked for: {', '.join(model_files)}")
+            print(f"[ERROR] No YOLO model found. Checked for: {', '.join(model_files)}")
             sys.exit(1)
         
         # Verify class files exist
         if not os.path.exists(old_class_filename):
-            print(f"❌ ERROR: {old_class_filename} not found")
+            print(f"[ERROR] {old_class_filename} not found")
             sys.exit(1)
         
         if not os.path.exists(new_class_filename):
-            print(f"❌ ERROR: {new_class_filename} not found")
+            print(f"[ERROR] {new_class_filename} not found")
             sys.exit(1)
         
         # Verify frames directory exists and has images
         if not os.path.exists(frames_dir):
-            print(f"❌ ERROR: {frames_dir} directory not found")
+            print(f"[ERROR] {frames_dir} directory not found")
             sys.exit(1)
         
         # Create annotation directory
         os.makedirs(annot_dir, exist_ok=True)
-        print(f"✓ Annotation directory: {annot_dir}")
+        print(f"[OK] Annotation directory: {annot_dir}")
         
         # Target folders and new filenames (try to copy classes to labelImg if available)
         targets = {
@@ -74,9 +74,9 @@ def main():
                 os.makedirs(folder, exist_ok=True)
                 target_path = os.path.join(folder, new_name)
                 shutil.copy(new_class_filename, target_path)
-                print(f"✓ Copied classes to {target_path}")
+                print(f"[OK] Copied classes to {target_path}")
             except Exception as e:
-                print(f"⚠ Warning: Could not copy to {folder}: {e}")
+                print(f"[WARN] Could not copy to {folder}: {e}")
         
         # Read class mappings
         old_class_list = []
@@ -90,8 +90,8 @@ def main():
             for line in f:
                 new_class_list.append(line.strip())
         
-        print(f"✓ Old classes ({len(old_class_list)}): {old_class_list}")
-        print(f"✓ New classes ({len(new_class_list)}): {new_class_list}")
+        print(f"[OK] Old classes ({len(old_class_list)}): {old_class_list}")
+        print(f"[OK] New classes ({len(new_class_list)}): {new_class_list}")
         
         # Build label mapping dictionary
         label_dict = {}
@@ -99,10 +99,10 @@ def main():
             if new_class_list[i] in old_class_list:
                 index = old_class_list.index(new_class_list[i])
                 label_dict[index] = i
-                print(f"✓ Mapped class {index} ({old_class_list[index]}) -> {i} ({new_class_list[i]})")
+                print(f"[OK] Mapped class {index} ({old_class_list[index]}) -> {i} ({new_class_list[i]})")
         
         if not label_dict:
-            print("⚠ WARNING: No classes were mapped! Check your class files.")
+            print("[WARN] No classes were mapped. Check your class files.")
         
         # Process frames
         frame_count = 0
@@ -122,7 +122,7 @@ def main():
                 # Read image
                 img = cv2.imread(datapath)
                 if img is None:
-                    print(f"  ❌ Error reading image {datapath}")
+                    print(f"  [ERROR] Error reading image {datapath}")
                     continue
                 
                 # Prepare output paths
@@ -131,7 +131,7 @@ def main():
                 
                 # Save copy of image
                 cv2.imwrite(img_filename, img)
-                print(f"  ✓ Saved image: {img_filename}")
+                print(f"  [OK] Saved image: {img_filename}")
                 
                 # Run YOLO inference
                 results = model(img)
@@ -150,16 +150,16 @@ def main():
                             annotation_count += 1
                 
                 processed_count += 1
-                print(f"  ✓ Generated annotation: {label_filename} ({annotation_count} boxes)")
+                print(f"  [OK] Generated annotation: {label_filename} ({annotation_count} boxes)")
         
         print(f"\n" + "="*60)
-        print(f"✓ Auto-annotation completed successfully!")
+        print(f"[OK] Auto-annotation completed successfully.")
         print(f"  Frames processed: {processed_count}/{frame_count}")
         print(f"  Output directory: {annot_dir}")
         print(f"="*60)
 
     except Exception as e:
-        print(f"❌ FATAL ERROR: {str(e)}", file=sys.stderr)
+        print(f"[ERROR] FATAL ERROR: {str(e)}", file=sys.stderr)
         import traceback
         traceback.print_exc()
         sys.exit(1)
