@@ -166,6 +166,66 @@ def _iter_label_files(folder_path):
     ]
 
 
+def _draw_boxes_on_image(
+    img,
+    custom_boxes,
+    yolo_boxes,
+    custom_color=(255, 0, 0),
+    yolo_color=(0, 255, 0),
+    thickness=2,
+):
+    """Draw detection boxes from both models on image.
+    
+    Args:
+        img: numpy image array (BGR)
+        custom_boxes: list of dicts with keys 'box', 'conf', 'cls' from custom model
+        yolo_boxes: list of dicts with keys 'box', 'conf', 'cls' from YOLO
+        custom_color: BGR color tuple for custom model boxes (default: blue)
+        yolo_color: BGR color tuple for YOLO boxes (default: green)
+        thickness: line thickness for boxes
+    
+    Returns:
+        Annotated image
+    """
+    img_annotated = img.copy()
+    
+    # Draw YOLO boxes first (so custom model boxes appear on top)
+    for box_data in yolo_boxes:
+        box = box_data["box"]
+        x1, y1, x2, y2 = int(box[0]), int(box[1]), int(box[2]), int(box[3])
+        cls = int(box_data["cls"])
+        conf = box_data["conf"]
+        
+        label_dict_local = _load_label_dict()
+        class_name = label_dict_local.get(cls, f"class_{cls}")
+        
+        cv2.rectangle(img_annotated, (x1, y1), (x2, y2), yolo_color, thickness)
+        text = f"YOLO:{class_name} {conf:.2f}"
+        cv2.putText(
+            img_annotated, text, (x1, y1 - 5),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.5, yolo_color, 1
+        )
+    
+    # Draw custom model boxes
+    for box_data in custom_boxes:
+        box = box_data["box"]
+        x1, y1, x2, y2 = int(box[0]), int(box[1]), int(box[2]), int(box[3])
+        cls = int(box_data["cls"])
+        conf = box_data["conf"]
+        
+        label_dict_local = _load_label_dict()
+        class_name = label_dict_local.get(cls, f"class_{cls}")
+        
+        cv2.rectangle(img_annotated, (x1, y1), (x2, y2), custom_color, thickness)
+        text = f"Custom:{class_name} {conf:.2f}"
+        cv2.putText(
+            img_annotated, text, (x1, y2 + 15),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.5, custom_color, 1
+        )
+    
+    return img_annotated
+
+
 def _copy_image_and_label(image_path: Path, destination_path: Path):
     """Copy one image and its same-stem txt label (if present) into destination."""
     shutil.copy2(image_path, destination_path / image_path.name)
@@ -185,22 +245,27 @@ def filter_poor_frames(
     iou_thresh=0.4,
     max_allowed_box_diff=1,
     clear_destination=True,
+    create_annotated=True,
 ):
     """Split frames into poor and non-poor sets using model-gap comparison.
 
     - Poor frames are copied to `destination_dir`.
     - Frames where custom is same/better are copied to `other_destination_dir` when provided.
     - Matching `.txt` labels (same filename stem) are copied with each frame when present.
+    - Annotated images with both model predictions are saved to `{destination_dir}_annotated`.
     - Destination folders can be cleared first for clean output.
     """
     source_path = Path(source_dir)
     destination_path = Path(destination_dir)
+    annotated_path = Path(str(destination_dir) + "_annotated") if create_annotated else None
     other_destination_path = Path(other_destination_dir) if other_destination_dir else None
 
     if not source_path.exists():
         raise FileNotFoundError(f"Source directory not found: {source_path}")
 
     destination_path.mkdir(parents=True, exist_ok=True)
+    if annotated_path:
+        annotated_path.mkdir(parents=True, exist_ok=True)
     if other_destination_path:
         other_destination_path.mkdir(parents=True, exist_ok=True)
 
@@ -209,6 +274,9 @@ def filter_poor_frames(
             file_path.unlink(missing_ok=True)
         for file_path in _iter_label_files(destination_path):
             file_path.unlink(missing_ok=True)
+        if annotated_path:
+            for file_path in _iter_image_files(annotated_path):
+                file_path.unlink(missing_ok=True)
         if other_destination_path:
             for file_path in _iter_image_files(other_destination_path):
                 file_path.unlink(missing_ok=True)
@@ -242,6 +310,17 @@ def filter_poor_frames(
 
         if is_worse:
             _copy_image_and_label(image_path, destination_path)
+            
+            # Create and save annotated version
+            if create_annotated and annotated_path:
+                annotated_img = _draw_boxes_on_image(
+                    frame, custom_boxes, yolo_boxes,
+                    custom_color=(255, 0, 0),  # Blue for custom model
+                    yolo_color=(0, 255, 0),   # Green for YOLO
+                )
+                annotated_output_path = annotated_path / image_path.name
+                cv2.imwrite(str(annotated_output_path), annotated_img)
+            
             poor_count += 1
         elif other_destination_path:
             _copy_image_and_label(image_path, other_destination_path)
@@ -251,6 +330,7 @@ def filter_poor_frames(
         "source_dir": str(source_path),
         "destination_dir": str(destination_path),
         "poor_destination_dir": str(destination_path),
+        "annotated_destination_dir": str(annotated_path) if annotated_path else "",
         "other_destination_dir": str(other_destination_path) if other_destination_path else "",
         "total_images": len(image_files),
         "selected_images": poor_count,

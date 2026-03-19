@@ -2165,8 +2165,28 @@ if current_page == "Annotate":
                         else:
                             st.session_state["filter_poor_dir"] = summary.get("poor_destination_dir", destination_filter_dir)
                             st.session_state["filter_other_dir"] = summary.get("other_destination_dir", other_destination_filter_dir)
+                            st.session_state["filter_annotated_dir"] = summary.get("annotated_destination_dir", "")
 
                             st.success("Filtering completed. Frames were split into poor and other sets.")
+                            st.info("✨ **Annotated comparison images** showing both your model (blue) and YOLO predictions (green) are ready in the annotated folder!")
+                            
+                            # Color legend for annotated images
+                            st.markdown("""
+                            <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%); border: 1px solid rgba(148, 163, 184, 0.3); border-radius: 12px; padding: 1rem; margin: 1rem 0;">
+                                <p style="color: #cbd5e1; margin: 0 0 0.75rem 0; font-weight: 600;">📋 Annotation Legend:</p>
+                                <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                        <div style="width: 24px; height: 24px; border: 3px solid #3b82f6; border-radius: 2px; background: rgba(59, 130, 246, 0.1);"></div>
+                                        <span style="color: #cbd5e1;"><span style="color: #3b82f6; font-weight: 700;">Blue</span> = Your Custom Model</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                        <div style="width: 24px; height: 24px; border: 3px solid #22c55e; border-radius: 2px; background: rgba(34, 197, 94, 0.1);"></div>
+                                        <span style="color: #cbd5e1;"><span style="color: #22c55e; font-weight: 700;">Green</span> = YOLO Baseline</span>
+                                    </div>
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
                             metric_col1, metric_col2, metric_col3 = st.columns(3)
                             with metric_col1:
                                 st.metric("Total Images", int(summary.get("total_images", 0)))
@@ -2174,8 +2194,26 @@ if current_page == "Annotate":
                                 st.metric("Poor Frames", int(summary.get("poor_images", summary.get("selected_images", 0))))
                             with metric_col3:
                                 st.metric("Other Frames", int(summary.get("other_images", 0)))
-                            st.caption(f"Poor folder: {summary.get('poor_destination_dir', destination_filter_dir)}")
-                            st.caption(f"Other folder: {summary.get('other_destination_dir', other_destination_filter_dir)}")
+                            
+                            st.divider()
+                            st.subheader("📁 Output Folders")
+                            col_fold1, col_fold2 = st.columns(2)
+                            with col_fold1:
+                                st.markdown(f"""
+                                **Raw Poor Frames**  
+                                `{summary.get('poor_destination_dir', destination_filter_dir)}`
+                                """)
+                            with col_fold2:
+                                st.markdown(f"""
+                                **Annotated Poor Frames**  
+                                `{summary.get('annotated_destination_dir', str(Path(destination_filter_dir) / '_annotated'))}`
+                                """)
+                            
+                            if summary.get("other_destination_dir"):
+                                st.markdown(f"""
+                                **Other Frames (Same/Better)**  
+                                `{summary.get('other_destination_dir', other_destination_filter_dir)}`
+                                """)
 
     # TAB 3: AUGMENT
     with tabs[2]:
@@ -2276,10 +2314,12 @@ if current_page == "Annotate":
         default_annot_dir = str(Path(st.session_state.get("annot_dir", str(ANNOT_DIR))))
         default_filter_poor_dir = st.session_state.get("filter_poor_dir", str(ANNOT_DIR / "filtered_poor"))
         default_filter_other_dir = st.session_state.get("filter_other_dir", str(ANNOT_DIR / "filtered_other"))
+        default_filter_annotated_dir = st.session_state.get("filter_annotated_dir", str(Path(default_filter_poor_dir) / ".." / "filtered_poor_annotated"))
 
         gallery_sources = {
             "Frames (Upload/Augment)": default_frames_dir,
-            "Filtered - Poor": default_filter_poor_dir,
+            "Filtered - Poor (Raw)": default_filter_poor_dir,
+            "Filtered - Poor (Annotated)": default_filter_annotated_dir,
             "Filtered - Other": default_filter_other_dir,
             "Annotation Folder": default_annot_dir,
             "Custom": default_frames_dir,
@@ -2301,6 +2341,25 @@ if current_page == "Annotate":
 
         gallery_dir = Path(gallery_dir_input)
         st.caption(f"Viewing folder: `{gallery_dir}`")
+        
+        # Show color legend for annotated filter images
+        if "Annotated" in selected_gallery_source:
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%); border: 1px solid rgba(148, 163, 184, 0.3); border-radius: 12px; padding: 1rem; margin: 1rem 0;">
+                <p style="color: #cbd5e1; margin: 0 0 0.75rem 0; font-weight: 600;">📋 Color Legend:</p>
+                <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 24px; height: 24px; border: 3px solid #3b82f6; border-radius: 2px; background: rgba(59, 130, 246, 0.1);"></div>
+                        <span style="color: #cbd5e1;"><span style="color: #3b82f6; font-weight: 700;">Blue</span> = Your Custom Model</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 24px; height: 24px; border: 3px solid #22c55e; border-radius: 2px; background: rgba(34, 197, 94, 0.1);"></div>
+                        <span style="color: #cbd5e1;"><span style="color: #22c55e; font-weight: 700;">Green</span> = YOLO Baseline</span>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
         IMAGES_PER_PAGE = 12
         
         def natural_sort_key(path):
